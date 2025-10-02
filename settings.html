@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings | Personal Expense Manager</title>
+    
+    <!-- Tailwind CSS (via CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <div class="flex h-screen">
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-gray-800 text-white flex-col hidden sm:flex">
+            <div class="p-4 border-b border-gray-700">
+                <!-- Changed App Name -->
+                <h1 class="text-xl font-bold"><i class="fas fa-wallet mr-2"></i>Personal Expense Manager</h1>
+            </div>
+            <nav class="flex-1 p-4 space-y-2">
+                <!-- Added Accounts & Categories Links -->
+                <a href="index.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-chart-pie mr-3"></i>Dashboard</a>
+                <a href="accounts.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-university mr-3"></i>Accounts</a>
+                <a href="categories.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-tags mr-3"></i>Categories</a>
+                <a href="history.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-history mr-3"></i>History</a>
+                <a href="settings.html" class="flex items-center px-4 py-2 text-gray-100 bg-gray-700 rounded-md"><i class="fas fa-cog mr-3"></i>Settings</a>
+            </nav>
+            <div class="p-4 border-t border-gray-700">
+                <button id="logout-button" class="w-full flex items-center justify-center px-4 py-2 text-gray-300 hover:bg-red-600 rounded-md">
+                    <i class="fas fa-sign-out-alt mr-3"></i>Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 md:p-10 overflow-y-auto">
+            <header class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-800">Settings</h2>
+                <p class="text-gray-500">Manage your application settings and budget.</p>
+            </header>
+
+            <!-- Budget Settings Card -->
+            <section class="max-w-2xl">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800">Monthly Budget</h3>
+                    <p class="text-gray-600 mb-6">Set a monthly spending limit to get alerts on your dashboard.</p>
+                    
+                    <form id="budget-form" class="space-y-4">
+                        <div>
+                            <label for="monthly-budget" class="block text-sm font-medium text-gray-700">Your Monthly Budget (₹)</label>
+                            <input type="number" id="monthly-budget" name="monthly-budget" min="0" step="100" required class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm" placeholder="e.g., 25000">
+                        </div>
+                        
+                        <!-- Status Message Area -->
+                        <div id="budget-status" class="text-sm h-5"></div>
+
+                        <button type="submit" class="w-full sm:w-auto bg-indigo-600 text-white py-2 px-6 rounded-md hover:bg-indigo-700">
+                            Save Budget
+                        </button>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="assets/js/firebase.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/budget.js"></script>
+</body>
+</html>
+
