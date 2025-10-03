@@ -16,7 +16,7 @@ function initializeHistoryPage(userId) {
     const transactionList = document.getElementById('history-transaction-list');
     const filterType = document.getElementById('filter-type');
     const filterCategorySelect = document.getElementById('filter-category');
-    const filterDate = document.getElementById('filter-date');
+    const searchTermInput = document.getElementById('search-term'); // Search input
     const filterButton = document.getElementById('filter-button');
     const resetButton = document.getElementById('reset-button');
 
@@ -26,7 +26,6 @@ function initializeHistoryPage(userId) {
 
     // --- Populate Category Filter Dropdown ---
     categoriesRef.orderBy('name').onSnapshot(snapshot => {
-        // Keep the "All Categories" option and add the rest dynamically
         filterCategorySelect.innerHTML = '<option value="all">All Categories</option>';
         snapshot.forEach(doc => {
             const category = doc.data();
@@ -37,7 +36,7 @@ function initializeHistoryPage(userId) {
     // --- Function to Render Transactions to the DOM ---
     const renderTransactions = (docs) => {
         transactionList.innerHTML = ''; // Clear the list first
-        if (docs.length === 0) {
+        if (!docs || docs.length === 0) {
             transactionList.innerHTML = '<p class="text-gray-500 text-center py-8">No transactions found for the selected filters.</p>';
             return;
         }
@@ -50,7 +49,6 @@ function initializeHistoryPage(userId) {
                 <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg shadow-sm">
                     <div>
                         <p class="font-bold text-gray-800">${transaction.description}</p>
-                        <!-- Updated to show account name -->
                         <p class="text-sm text-gray-500">${transaction.accountName || 'N/A'} | ${transaction.category} on ${transaction.date}</p>
                     </div>
                     <div class="flex items-center space-x-4">
@@ -65,42 +63,60 @@ function initializeHistoryPage(userId) {
         });
     };
 
-    // --- Function to Fetch Transactions based on a query ---
-    const fetchTransactions = (query) => {
+    // --- Main Function to Fetch and Filter Transactions ---
+    const applyFiltersAndSearch = async () => {
         transactionList.innerHTML = '<p class="text-gray-500 text-center py-8">Loading transactions...</p>';
-        query.get()
-            .then(snapshot => renderTransactions(snapshot.docs))
-            .catch(error => console.error("Error fetching transactions: ", error));
-    };
-    
-    // --- Initial Fetch ---
-    let baseQuery = transactionsRef.orderBy('date', 'desc');
-    fetchTransactions(baseQuery);
+        
+        let query = transactionsRef.orderBy('date', 'desc');
 
-    // --- Event Listeners ---
-    // Filter Button
-    filterButton.addEventListener('click', () => {
-        let filteredQuery = transactionsRef.orderBy('date', 'desc'); // Start with the base query
+        // Apply Firestore-level filters
         if (filterType.value !== 'all') {
-            filteredQuery = filteredQuery.where('type', '==', filterType.value);
+            query = query.where('type', '==', filterType.value);
         }
         if (filterCategorySelect.value !== 'all') {
-            filteredQuery = filteredQuery.where('category', '==', filterCategorySelect.value);
+            query = query.where('category', '==', filterCategorySelect.value);
         }
-        if (filterDate.value) {
-            filteredQuery = filteredQuery.where('date', '==', filterDate.value);
-        }
-        fetchTransactions(filteredQuery);
-    });
 
-    // Reset Button
+        try {
+            const snapshot = await query.get();
+            let transactions = snapshot.docs;
+
+            // Apply client-side search filter
+            const searchTerm = searchTermInput.value.toLowerCase().trim();
+            if (searchTerm) {
+                transactions = transactions.filter(doc => {
+                    const data = doc.data();
+                    const description = data.description ? data.description.toLowerCase() : '';
+                    const category = data.category ? data.category.toLowerCase() : '';
+                    const accountName = data.accountName ? data.accountName.toLowerCase() : '';
+
+                    return description.includes(searchTerm) || 
+                           category.includes(searchTerm) || 
+                           accountName.includes(searchTerm);
+                });
+            }
+
+            renderTransactions(transactions);
+
+        } catch (error) {
+            console.error("Error fetching transactions: ", error);
+            transactionList.innerHTML = '<p class="text-red-500 text-center py-8">Error loading data. Please check console.</p>';
+        }
+    };
+
+    // --- Initial Fetch ---
+    applyFiltersAndSearch();
+
+    // --- Event Listeners ---
+    filterButton.addEventListener('click', applyFiltersAndSearch);
+
     resetButton.addEventListener('click', () => {
         // Reset form fields
         filterType.value = 'all';
         filterCategorySelect.value = 'all';
-        filterDate.value = '';
+        searchTermInput.value = '';
         // Fetch the original full list
-        fetchTransactions(baseQuery);
+        applyFiltersAndSearch();
     });
 
     // Delete Button (using event delegation)
@@ -110,10 +126,9 @@ function initializeHistoryPage(userId) {
             const docId = deleteButton.dataset.id;
             if (confirm('Are you sure you want to delete this transaction?')) {
                 transactionsRef.doc(docId).delete()
-                    .then(() => filterButton.click()) // Re-apply filter to refresh the list
+                    .then(() => applyFiltersAndSearch()) // Re-apply filters to refresh the list
                     .catch(error => console.error("Error deleting transaction: ", error));
             }
         }
     });
 }
-

@@ -6,26 +6,34 @@
     <title>Dashboard | Personal Expense Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* Styles for the calculator popup */
         .calculator { display: none; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
         .calculator.active { display: grid; }
         .calc-btn { transition: background-color 0.2s; }
     </style>
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="font-sans" style="background-color: #EAE5E1;">
 
-    <div class="flex h-screen">
-        <!-- Sidebar Navigation -->
-        <aside class="w-64 bg-gray-800 text-white flex-col hidden sm:flex">
-            <div class="p-4 border-b border-gray-700">
+    <div class="relative min-h-screen md:flex">
+        <div class="md:hidden flex justify-between items-center bg-gray-800 text-white p-4">
+            <h1 class="text-xl font-bold"><i class="fas fa-wallet mr-2"></i>Expense Manager</h1>
+            <button id="menu-button" class="focus:outline-none">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+        </div>
+
+        <aside id="sidebar" class="w-64 bg-gray-800 text-white flex-col fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50">
+            <div class="p-4 border-b border-gray-700 hidden md:block">
                 <h1 class="text-xl font-bold"><i class="fas fa-wallet mr-2"></i>Personal Expense Manager</h1>
             </div>
             <nav class="flex-1 p-4 space-y-2">
                 <a href="index.html" class="flex items-center px-4 py-2 text-gray-100 bg-gray-700 rounded-md"><i class="fas fa-chart-pie mr-3"></i>Dashboard</a>
+                <a href="analysis.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-chart-line mr-3"></i>Analysis</a>
                 <a href="accounts.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-university mr-3"></i>Accounts</a>
                 <a href="categories.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-tags mr-3"></i>Categories</a>
                 <a href="history.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-history mr-3"></i>History</a>
+                <a href="profile.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-user-circle mr-3"></i>Profile</a>
                 <a href="settings.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-cog mr-3"></i>Settings</a>
             </nav>
             <div class="p-4 border-t border-gray-700">
@@ -33,7 +41,6 @@
             </div>
         </aside>
 
-        <!-- Main Content -->
         <main class="flex-1 p-6 md:p-10 overflow-y-auto">
             <header class="mb-8">
                 <h2 class="text-3xl font-bold text-gray-800">Welcome Back!</h2>
@@ -41,15 +48,12 @@
             </header>
             
             <section class="grid lg:grid-cols-5 gap-6">
-                <!-- Add Transaction Form -->
                 <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
                     <h3 class="text-2xl font-bold mb-4 text-gray-800">Add Transaction</h3>
                     <form id="transaction-form" class="space-y-4">
                         <div><label for="account" class="block text-sm font-medium text-gray-700">Account</label><select id="account" name="account" required class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm"></select></div>
                         <div><label for="type" class="block text-sm font-medium text-gray-700">Type</label><select id="type" name="type" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm"><option value="expense">Expense</option><option value="income">Income</option></select></div>
                         <div><label for="category" class="block text-sm font-medium text-gray-700">Category</label><select id="category" name="category" required class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm"></select></div>
-                        
-                        <!-- Amount Field with Calculator -->
                         <div class="relative">
                             <label for="amount" class="block text-sm font-medium text-gray-700">Amount (₹)</label>
                             <div class="flex items-center mt-1">
@@ -64,13 +68,11 @@
                                 <button type="button" id="calc-equals" class="col-span-4 calc-btn py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">=</button>
                             </div>
                         </div>
-
                         <div><label for="description" class="block text-sm font-medium text-gray-700">Description</label><input type="text" id="description" name="description" required class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm" placeholder="e.g., Lunch"></div>
                         <div><label for="date" class="block text-sm font-medium text-gray-700">Date</label><input type="date" id="date" name="date" required class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm"></div>
                         <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700">Add Transaction</button>
                     </form>
                 </div>
-                <!-- Right Side Content -->
                 <div class="lg:col-span-3 space-y-6">
                     <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div class="bg-white p-4 rounded-lg shadow-md"><h3 class="text-gray-500 text-md">Total Income</h3><p id="total-income" class="text-2xl font-bold text-green-500">₹0.00</p></div>
@@ -81,58 +83,26 @@
                         <h3 class="text-2xl font-bold mb-4 text-gray-800">Recent Transactions</h3>
                         <div id="transaction-list" class="space-y-3 max-h-80 overflow-y-auto"><p class="text-gray-500">Loading transactions...</p></div>
                     </section>
+                    <section class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-2xl font-bold mb-4 text-gray-800">Expense Breakdown</h3>
+                        <div style="height: 320px;"><canvas id="expense-pie-chart"></canvas></div>
+                    </section>
                 </div>
             </section>
+            <footer class="text-center mt-12">
+                <p class="text-gray-500 text-sm">Developed by <span class="font-semibold">Ammar Shaikh</span> | <a href="mailto:ammarsk200422@gmail.com" class="text-indigo-600 hover:underline">ammarsk200422@gmail.com</a></p>
+            </footer>
         </main>
     </div>
-    <!-- Scripts -->
     <script>
-        // Inline Calculator Logic
         document.addEventListener('DOMContentLoaded', () => {
-            const amountInput = document.getElementById('amount');
-            const calcToggleBtn = document.getElementById('calc-toggle-btn');
-            const calculator = document.getElementById('calculator');
-            let currentExpression = '';
-
-            // Toggle calculator visibility
-            calcToggleBtn.addEventListener('click', (e) => {
-                e.stopPropagation(); // Prevent click from closing it immediately
-                calculator.classList.toggle('active');
-            });
-
-            // Handle calculator button clicks
+            const amountInput = document.getElementById('amount'); const calcToggleBtn = document.getElementById('calc-toggle-btn'); const calculator = document.getElementById('calculator'); let currentExpression = '';
+            calcToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); calculator.classList.toggle('active'); });
             calculator.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const btn = e.target;
-                if (!btn.classList.contains('calc-btn')) return;
-                const value = btn.textContent;
-                
-                if (value === '=') {
-                    try {
-                        // A safer way to evaluate mathematical expressions without using eval()
-                        const result = Function('"use strict";return (' + currentExpression + ')')();
-                        amountInput.value = result;
-                        currentExpression = '';
-                        calculator.classList.remove('active');
-                    } catch {
-                        amountInput.value = 'Error';
-                        currentExpression = '';
-                    }
-                } else if (value === 'C') {
-                    currentExpression = '';
-                    amountInput.value = '';
-                } else {
-                    currentExpression += value;
-                    amountInput.value = currentExpression;
-                }
+                e.stopPropagation(); const btn = e.target; if (!btn.classList.contains('calc-btn')) return; const value = btn.textContent;
+                if (value === '=') { try { const result = Function('"use strict";return (' + currentExpression + ')')(); amountInput.value = result; currentExpression = ''; calculator.classList.remove('active'); } catch { amountInput.value = 'Error'; currentExpression = ''; } } else if (value === 'C') { currentExpression = ''; amountInput.value = ''; } else { currentExpression += value; amountInput.value = currentExpression; }
             });
-
-            // Close calculator if clicking outside
-            document.addEventListener('click', (e) => {
-                if (!calculator.contains(e.target) && !calcToggleBtn.contains(e.target)) {
-                    calculator.classList.remove('active');
-                }
-            });
+            document.addEventListener('click', (e) => { if (!calculator.contains(e.target) && !calcToggleBtn.contains(e.target)) { calculator.classList.remove('active'); } });
         });
     </script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -140,8 +110,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
     <script src="assets/js/firebase.js"></script>
     <script src="assets/js/auth.js"></script>
+    <script src="assets/js/main.js"></script>
     <script src="assets/js/expense.js"></script>
     <script src="assets/js/charts.js"></script>
 </body>
 </html>
-

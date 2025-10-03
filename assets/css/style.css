@@ -1,0 +1,17 @@
+/* Basic styling for smooth transition on sidebar */
+.sidebar {
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Initially hide sidebar on mobile */
+@media (max-width: 640px) {
+    .sidebar {
+        transform: translateX(-100%);
+        position: fixed; /* Keep it fixed on the screen */
+        height: 100vh;
+        z-index: 50; /* Ensure it's on top */
+    }
+    .sidebar-open {
+        transform: translateX(0);
+    }
+}

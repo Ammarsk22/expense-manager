@@ -6,68 +6,57 @@ document.addEventListener('DOMContentLoaded', function() {
     auth.onAuthStateChanged(user => {
         // Run this script only if the user is logged in and on the dashboard page
         if (user && (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('/'))) {
-            initializeCharts(user.uid);
+            initializeDashboard(user.uid);
         }
     });
 });
 
-function initializeCharts(userId) {
+function initializeDashboard(userId) {
+    // --- Elements for Summary Cards ---
     const totalIncomeEl = document.getElementById('total-income');
     const totalExpenseEl = document.getElementById('total-expense');
     const balanceEl = document.getElementById('balance');
+    
+    // --- Element for Pie Chart (can be optional) ---
     const pieChartCanvas = document.getElementById('expense-pie-chart')?.getContext('2d');
 
-    if (!pieChartCanvas) { return; } // Exit if canvas not found
-
+    // --- Firestore References ---
     const transactionsRef = db.collection('users').doc(userId).collection('transactions');
-    const categoriesRef = db.collection('users').doc(userId).collection('categories');
 
-    // This function will refresh all dashboard data
-    const refreshDashboard = () => {
-        Promise.all([
-            transactionsRef.get(),
-            categoriesRef.where('type', '==', 'expense').get()
-        ]).then(([transactionsSnapshot, categoriesSnapshot]) => {
-            let totalIncome = 0;
-            let totalExpense = 0;
-            const expenseData = {};
+    // --- Real-time listener for transactions ---
+    transactionsRef.onSnapshot(transactionsSnapshot => {
+        let totalIncome = 0;
+        let totalExpense = 0;
+        const expenseData = {}; // Data for the pie chart
 
-            // Initialize all user-defined expense categories with a value of 0
-            categoriesSnapshot.forEach(doc => {
-                expenseData[doc.data().name] = 0;
-            });
-
-            // Calculate totals and aggregate expenses by category
-            transactionsSnapshot.forEach(doc => {
-                const transaction = doc.data();
-                if (transaction.type === 'income') {
-                    totalIncome += transaction.amount;
-                } else if (transaction.type === 'expense') {
-                    totalExpense += transaction.amount;
-                    // Only add to expenseData if the category exists
-                    if (expenseData.hasOwnProperty(transaction.category)) {
-                        expenseData[transaction.category] += transaction.amount;
-                    }
+        // Loop through all transactions to calculate totals
+        transactionsSnapshot.forEach(doc => {
+            const transaction = doc.data();
+            if (transaction.type === 'income') {
+                totalIncome += transaction.amount;
+            } else if (transaction.type === 'expense') {
+                totalExpense += transaction.amount;
+                // Aggregate data for the pie chart
+                if (transaction.category) {
+                    expenseData[transaction.category] = (expenseData[transaction.category] || 0) + transaction.amount;
                 }
-            });
-
-            const balance = totalIncome - totalExpense;
-
-            // --- Update Summary Cards ---
-            totalIncomeEl.textContent = `₹${totalIncome.toFixed(2)}`;
-            totalExpenseEl.textContent = `₹${totalExpense.toFixed(2)}`;
-            balanceEl.textContent = `₹${balance.toFixed(2)}`;
-            balanceEl.classList.toggle('text-red-500', balance < 0);
-            balanceEl.classList.toggle('text-blue-500', balance >= 0);
-
-            // --- Update Pie Chart ---
-            updatePieChart(pieChartCanvas, expenseData);
+            }
         });
-    };
 
-    // Refresh dashboard data whenever transactions or categories change
-    transactionsRef.onSnapshot(refreshDashboard);
-    categoriesRef.onSnapshot(refreshDashboard);
+        const balance = totalIncome - totalExpense;
+
+        // --- Update Summary Cards ---
+        totalIncomeEl.textContent = `₹${totalIncome.toFixed(2)}`;
+        totalExpenseEl.textContent = `₹${totalExpense.toFixed(2)}`;
+        balanceEl.textContent = `₹${balance.toFixed(2)}`;
+        balanceEl.classList.toggle('text-red-500', balance < 0);
+        balanceEl.classList.toggle('text-blue-500', balance >= 0);
+
+        // --- Update Pie Chart (only if the canvas exists) ---
+        if (pieChartCanvas) {
+            updatePieChart(pieChartCanvas, expenseData);
+        }
+    });
 }
 
 function updatePieChart(ctx, data) {
@@ -79,7 +68,7 @@ function updatePieChart(ctx, data) {
     }
 
     expensePieChart = new Chart(ctx, {
-        type: 'doughnut', // Doughnut chart looks a bit more modern
+        type: 'doughnut',
         data: {
             labels: labels,
             datasets: [{
@@ -103,4 +92,3 @@ function updatePieChart(ctx, data) {
         }
     });
 }
-

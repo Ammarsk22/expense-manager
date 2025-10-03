@@ -39,7 +39,8 @@ function initializeExpenseTracking(userId) {
 
     // --- Populate Categories Dropdown based on Type ---
     const populateCategories = (type) => {
-        categoriesRef.where('type', '==', type).orderBy('name').onSnapshot(snapshot => {
+        // BADLAV YAHAN KIYA GAYA HAI: .orderBy('name') ko hata diya gaya hai
+        categoriesRef.where('type', '==', type).onSnapshot(snapshot => {
             categorySelect.innerHTML = '<option value="" disabled selected>Select Category</option>';
             if (snapshot.empty) {
                  categorySelect.innerHTML = `<option value="" disabled>No ${type} categories found</option>`;

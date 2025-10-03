@@ -44,7 +44,8 @@ function initializeCategoriesPage(userId) {
 
     // --- Reusable Function to DISPLAY & DELETE CATEGORIES ---
     const renderCategories = (listElement, type) => {
-        categoriesRef.where('type', '==', type).orderBy('name').onSnapshot(snapshot => {
+        // BADLAV YAHAN KIYA GAYA HAI: .orderBy('name') ko hata diya gaya hai
+        categoriesRef.where('type', '==', type).onSnapshot(snapshot => {
             listElement.innerHTML = ''; // Clear the list before re-rendering
             if (snapshot.empty) {
                 listElement.innerHTML = `<p class="text-gray-500">No ${type} categories yet. Add one to get started.</p>`;
@@ -85,4 +86,3 @@ function initializeCategoriesPage(userId) {
     expenseList.addEventListener('click', handleDelete);
     incomeList.addEventListener('click', handleDelete);
 }
-

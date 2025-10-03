@@ -17,6 +17,16 @@ function initializeAccountsPage(userId) {
     const fromAccountSelect = document.getElementById('from-account');
     const toAccountSelect = document.getElementById('to-account');
 
+    // --- Edit Modal DOM Elements ---
+    const editModal = document.getElementById('edit-account-modal');
+    const editAccountForm = document.getElementById('edit-account-form');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const cancelEditBtn = document.getElementById('cancel-edit-btn');
+    const editAccountId = document.getElementById('edit-account-id');
+    const editAccountName = document.getElementById('edit-account-name');
+    const editOpeningBalance = document.getElementById('edit-opening-balance');
+    const editAccountType = document.getElementById('edit-account-type');
+
     // --- Firestore References ---
     const accountsRef = db.collection('users').doc(userId).collection('accounts');
     const transactionsRef = db.collection('users').doc(userId).collection('transactions');
@@ -37,13 +47,12 @@ function initializeAccountsPage(userId) {
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         }).then(() => {
             addAccountForm.reset();
-            addAccountForm['opening-balance'].value = 0; // Reset opening balance to 0
+            addAccountForm['opening-balance'].value = 0;
         }).catch(error => console.error("Error adding account: ", error));
     });
 
-    // --- DISPLAY ACCOUNTS & CALCULATE BALANCES (REAL-TIME) ---
+    // --- DISPLAY ACCOUNTS & CALCULATE BALANCES ---
     const refreshAccountsAndBalances = () => {
-        // First, get all accounts. Then, get all transactions.
         Promise.all([
             accountsRef.orderBy('name').get(),
             transactionsRef.get()
@@ -57,13 +66,11 @@ function initializeAccountsPage(userId) {
             let html = '';
             let accountOptions = '';
 
-            // Loop through each account to calculate its balance
             accountsSnapshot.forEach(doc => {
                 const account = doc.data();
                 const accountId = doc.id;
                 let balance = account.openingBalance || 0;
 
-                // Loop through all transactions to find ones related to this account
                 transactionsSnapshot.forEach(tDoc => {
                     const t = tDoc.data();
                     if (t.accountId === accountId) {
@@ -80,9 +87,13 @@ function initializeAccountsPage(userId) {
                             <p class="font-bold text-gray-800">${account.name}</p>
                             <p class="text-sm text-gray-500">${account.type}</p>
                         </div>
-                        <div class="text-right">
-                            <p class="font-bold text-lg ${balanceColor}">₹${balance.toFixed(2)}</p>
-                            <p class="text-xs text-gray-400">Current Balance</p>
+                        <div class="flex items-center space-x-4">
+                             <div class="text-right">
+                                <p class="font-bold text-lg ${balanceColor}">₹${balance.toFixed(2)}</p>
+                                <p class="text-xs text-gray-400">Current Balance</p>
+                            </div>
+                            <button data-id="${accountId}" class="edit-account-btn text-gray-400 hover:text-blue-500"><i class="fas fa-edit"></i></button>
+                            <button data-id="${accountId}" class="delete-account-btn text-gray-400 hover:text-red-500"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
                 `;
@@ -95,7 +106,6 @@ function initializeAccountsPage(userId) {
         });
     };
     
-    // Refresh the account list and balances whenever accounts or transactions change.
     accountsRef.onSnapshot(refreshAccountsAndBalances);
     transactionsRef.onSnapshot(refreshAccountsAndBalances);
 
@@ -116,9 +126,8 @@ function initializeAccountsPage(userId) {
         }
 
         const date = new Date().toISOString().split('T')[0];
-        const batch = db.batch(); // Use a batch for atomic writes
+        const batch = db.batch();
 
-        // 1. Create an 'expense' transaction for the 'from' account
         const expenseRef = transactionsRef.doc();
         batch.set(expenseRef, {
             type: 'expense', category: 'Transfer', description: `Transfer to ${toAccountName}`,
@@ -126,7 +135,6 @@ function initializeAccountsPage(userId) {
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         
-        // 2. Create an 'income' transaction for the 'to' account
         const incomeRef = transactionsRef.doc();
         batch.set(incomeRef, {
             type: 'income', category: 'Transfer', description: `Transfer from ${fromAccountName}`,
@@ -134,7 +142,6 @@ function initializeAccountsPage(userId) {
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // Commit both writes at once
         batch.commit().then(() => {
             console.log("Transfer successful!");
             transferForm.reset();
@@ -143,5 +150,61 @@ function initializeAccountsPage(userId) {
             alert("Transfer failed. Please try again.");
         });
     });
-}
 
+    // --- EDIT & DELETE LOGIC ---
+    accountsListEl.addEventListener('click', async (e) => {
+        const editBtn = e.target.closest('.edit-account-btn');
+        const deleteBtn = e.target.closest('.delete-account-btn');
+
+        // Handle Edit
+        if (editBtn) {
+            const id = editBtn.dataset.id;
+            const doc = await accountsRef.doc(id).get();
+            if (doc.exists) {
+                const account = doc.data();
+                editAccountId.value = id;
+                editAccountName.value = account.name;
+                editOpeningBalance.value = account.openingBalance;
+                editAccountType.value = account.type;
+                editModal.classList.remove('hidden');
+                editModal.classList.add('modal-active');
+            }
+        }
+
+        // Handle Delete
+        if (deleteBtn) {
+            const id = deleteBtn.dataset.id;
+            const associatedTransactions = await transactionsRef.where('accountId', '==', id).limit(1).get();
+
+            if (!associatedTransactions.empty) {
+                alert("Cannot delete this account because it has transactions associated with it. Please delete the transactions first.");
+                return;
+            }
+
+            if (confirm('Are you sure you want to delete this account? This action cannot be undone.')) {
+                await accountsRef.doc(id).delete();
+            }
+        }
+    });
+
+    // --- EDIT MODAL LOGIC ---
+    const closeModal = () => {
+        editModal.classList.add('hidden');
+        editModal.classList.remove('modal-active');
+    };
+
+    editAccountForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = editAccountId.value;
+        const updatedData = {
+            name: editAccountName.value,
+            openingBalance: parseFloat(editOpeningBalance.value),
+            type: editAccountType.value
+        };
+        await accountsRef.doc(id).update(updatedData);
+        closeModal();
+    });
+
+    closeModalBtn.addEventListener('click', closeModal);
+    cancelEditBtn.addEventListener('click', closeModal);
+}

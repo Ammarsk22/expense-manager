@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis | Personal Expense Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .modal { transition: opacity 0.25s ease; }
+    </style>
+</head>
+<body class="font-sans" style="background-color: #EAE5E1;">
+
+    <div class="relative min-h-screen md:flex">
+        <aside id="sidebar" class="w-64 bg-gray-800 text-white flex-col fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50">
+            <div class="p-4 border-b border-gray-700 hidden md:block">
+                <h1 class="text-xl font-bold"><i class="fas fa-wallet mr-2"></i>Personal Expense Manager</h1>
+            </div>
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="index.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-chart-pie mr-3"></i>Dashboard</a>
+                <a href="analysis.html" class="flex items-center px-4 py-2 text-gray-100 bg-gray-700 rounded-md"><i class="fas fa-chart-line mr-3"></i>Analysis</a>
+                <a href="accounts.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-university mr-3"></i>Accounts</a>
+                <a href="categories.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-tags mr-3"></i>Categories</a>
+                <a href="history.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-history mr-3"></i>History</a>
+                <a href="profile.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-user-circle mr-3"></i>Profile</a>
+                <a href="settings.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-cog mr-3"></i>Settings</a>
+            </nav>
+            <div class="p-4 border-t border-gray-700">
+                <button id="logout-button" class="w-full flex items-center justify-center px-4 py-2 text-gray-300 hover:bg-red-600 rounded-md"><i class="fas fa-sign-out-alt mr-3"></i>Logout</button>
+            </div>
+        </aside>
+
+        <main class="flex-1 p-6 md:p-10 overflow-y-auto">
+            <header class="flex justify-between items-center mb-6">
+                <button id="prev-period-btn" class="text-gray-600 hover:text-indigo-600 text-2xl"><i class="fas fa-chevron-left"></i></button>
+                <h2 id="period-display" class="text-xl md:text-3xl font-bold text-gray-800 text-center"></h2>
+                <div class="flex items-center space-x-4">
+                    <button id="next-period-btn" class="text-gray-600 hover:text-indigo-600 text-2xl"><i class="fas fa-chevron-right"></i></button>
+                    <button id="display-options-btn" class="text-gray-600 hover:text-indigo-600 text-xl"><i class="fas fa-sliders-h"></i></button>
+                </div>
+            </header>
+
+            <section id="summary-cards" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-4 rounded-lg shadow-md text-center"><h3 class="text-gray-500 text-md">Total Income</h3><p id="total-income" class="text-2xl font-bold text-green-500">₹0.00</p></div>
+                <div class="bg-white p-4 rounded-lg shadow-md text-center"><h3 class="text-gray-500 text-md">Total Expense</h3><p id="total-expense" class="text-2xl font-bold text-red-500">₹0.00</p></div>
+                <div class="bg-white p-4 rounded-lg shadow-md text-center"><h3 class="text-gray-500 text-md">Balance</h3><p id="balance" class="text-2xl font-bold text-blue-500">₹0.00</p></div>
+            </section>
+            
+            <section class="bg-white p-6 rounded-lg shadow-md">
+                <h3 class="text-2xl font-bold mb-4 text-gray-800">Expense Overview</h3>
+                <div id="analysis-content" class="grid md:grid-cols-2 gap-8 items-center">
+                    <div style="height: 300px;"><canvas id="expense-overview-chart"></canvas></div>
+                    <div id="expense-list" class="space-y-4 max-h-80 overflow-y-auto"></div>
+                </div>
+            </section>
+
+            <footer class="text-center mt-12">
+                <p class="text-gray-500 text-sm">Developed by <span class="font-semibold">Ammar Shaikh</span> | <a href="mailto:ammarsk200422@gmail.com" class="text-indigo-600 hover:underline">ammarsk200422@gmail.com</a></p>
+            </footer>
+        </main>
+    </div>
+
+    <div id="options-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Display options</h3>
+            <div class="mb-4">
+                <p class="font-semibold text-gray-700">View mode:</p>
+                <div id="view-mode-options" class="mt-2 space-y-1 text-gray-600">
+                    <p data-mode="daily" class="cursor-pointer hover:text-indigo-600 p-1 rounded">DAILY</p>
+                    <p data-mode="weekly" class="cursor-pointer hover:text-indigo-600 p-1 rounded">WEEKLY</p>
+                    <p data-mode="monthly" class="cursor-pointer hover:text-indigo-600 p-1 rounded">MONTHLY</p>
+                    <p data-mode="3-months" class="cursor-pointer hover:text-indigo-600 p-1 rounded">3 MONTHS</p>
+                    <p data-mode="yearly" class="cursor-pointer hover:text-indigo-600 p-1 rounded">YEARLY</p>
+                </div>
+            </div>
+             <div class="mb-4">
+                <p class="font-semibold text-gray-700">Show total:</p>
+                 <div id="show-total-options" class="mt-2 space-y-1 text-gray-600">
+                    <p data-option="true" class="cursor-pointer hover:text-indigo-600 p-1 rounded">YES</p>
+                    <p data-option="false" class="cursor-pointer hover:text-indigo-600 p-1 rounded">NO</p>
+                </div>
+            </div>
+            <div>
+                <p class="font-semibold text-gray-700">Carry over:</p>
+                 <div id="carry-over-options" class="mt-2 space-y-1 text-gray-600">
+                    <p data-option="true" class="cursor-pointer hover:text-indigo-600 p-1 rounded">ON</p>
+                    <p data-option="false" class="cursor-pointer hover:text-indigo-600 p-1 rounded">OFF</p>
+                </div>
+                 <p class="text-xs text-gray-500 mt-2"><i class="fas fa-info-circle mr-1"></i>With Carry over enabled, monthly surplus will be added to the next month.</p>
+            </div>
+            <div class="text-right mt-6">
+                 <button id="close-options-btn" class="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <script src="assets/js/firebase.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/main.js"></script>
+    <script src="assets/js/analysis.js"></script>
+</body>
+</html>

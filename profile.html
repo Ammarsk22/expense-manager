@@ -3,21 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings | Personal Expense Manager</title>
+    <title>Profile | Personal Expense Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body class="font-sans" style="background-color: #EAE5E1;">
 
     <div class="relative min-h-screen md:flex">
-        <div class="md:hidden flex justify-between items-center bg-gray-800 text-white p-4">
-            <h1 class="text-xl font-bold"><i class="fas fa-wallet mr-2"></i>Expense Manager</h1>
-            <button id="menu-button" class="focus:outline-none">
-                <i class="fas fa-bars text-xl"></i>
-            </button>
-        </div>
-
         <aside id="sidebar" class="w-64 bg-gray-800 text-white flex-col fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50">
             <div class="p-4 border-b border-gray-700 hidden md:block">
                 <h1 class="text-xl font-bold"><i class="fas fa-wallet mr-2"></i>Personal Expense Manager</h1>
@@ -28,8 +20,8 @@
                 <a href="accounts.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-university mr-3"></i>Accounts</a>
                 <a href="categories.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-tags mr-3"></i>Categories</a>
                 <a href="history.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-history mr-3"></i>History</a>
-                <a href="profile.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-user-circle mr-3"></i>Profile</a>
-                <a href="settings.html" class="flex items-center px-4 py-2 text-gray-100 bg-gray-700 rounded-md"><i class="fas fa-cog mr-3"></i>Settings</a>
+                <a href="profile.html" class="flex items-center px-4 py-2 text-gray-100 bg-gray-700 rounded-md"><i class="fas fa-user-circle mr-3"></i>Profile</a>
+                <a href="settings.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-cog mr-3"></i>Settings</a>
             </nav>
             <div class="p-4 border-t border-gray-700">
                 <button id="logout-button" class="w-full flex items-center justify-center px-4 py-2 text-gray-300 hover:bg-red-600 rounded-md"><i class="fas fa-sign-out-alt mr-3"></i>Logout</button>
@@ -38,35 +30,33 @@
 
         <main class="flex-1 p-6 md:p-10 overflow-y-auto">
             <header class="mb-8">
-                <h2 class="text-3xl font-bold text-gray-800">Settings</h2>
-                <p class="text-gray-500">Manage your application settings and budget.</p>
+                <h2 class="text-3xl font-bold text-gray-800">Your Profile</h2>
+                <p class="text-gray-500">Manage your personal information.</p>
             </header>
 
             <section class="max-w-2xl">
                 <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h3 class="text-2xl font-bold mb-4 text-gray-800">Monthly Budget</h3>
-                    <p class="text-gray-600 mb-6">Set a monthly spending limit to get alerts on your dashboard.</p>
-                    
-                    <form id="budget-form" class="space-y-4">
+                    <form id="profile-form" class="space-y-4">
                         <div>
-                            <label for="monthly-budget" class="block text-sm font-medium text-gray-700">Your Monthly Budget (₹)</label>
-                            <input type="number" id="monthly-budget" name="monthly-budget" min="0" step="100" required class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm" placeholder="e.g., 25000">
+                            <label for="profile-name" class="block text-sm font-medium text-gray-700">Full Name</label>
+                            <input type="text" id="profile-name" class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm" placeholder="Your Name">
                         </div>
-                        
-                        <div id="budget-status" class="text-sm h-5"></div>
-
-                        <button type="submit" class="w-full sm:w-auto bg-indigo-600 text-white py-2 px-6 rounded-md hover:bg-indigo-700">
-                            Save Budget
-                        </button>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Email Address</label>
+                            <p id="profile-email" class="mt-1 text-gray-500 bg-gray-100 p-2 rounded-md"></p>
+                        </div>
+                        <div id="profile-status" class="text-sm h-5"></div>
+                        <div>
+                            <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700">
+                                Save Changes
+                            </button>
+                        </div>
                     </form>
                 </div>
             </section>
 
             <footer class="text-center mt-12">
-                <p class="text-gray-500 text-sm">
-                    Developed by <span class="font-semibold">Ammar Shaikh</span> | 
-                    <a href="mailto:ammarsk200422@gmail.com" class="text-indigo-600 hover:underline">ammarsk200422@gmail.com</a>
-                </p>
+                <p class="text-gray-500 text-sm">Developed by <span class="font-semibold">Ammar Shaikh</span> | <a href="mailto:ammarsk200422@gmail.com" class="text-indigo-600 hover:underline">ammarsk200422@gmail.com</a></p>
             </footer>
         </main>
     </div>
@@ -77,6 +67,6 @@
     <script src="assets/js/firebase.js"></script>
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/main.js"></script>
-    <script src="assets/js/budget.js"></script>
+    <script src="assets/js/profile.js"></script>
 </body>
 </html>
