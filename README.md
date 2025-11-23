@@ -1,149 +1,99 @@
-💰 Personal Expense Manager
+# 💰 Personal Expense Manager
 
-A modern, responsive, and cloud-powered web application for tracking personal finances, built with HTML, Tailwind CSS, Vanilla JavaScript, and Firebase.
+A modern, responsive, and cloud-powered web application for tracking personal finances, built with **HTML**, **Tailwind CSS**, **Vanilla JavaScript**, and **Firebase**.
 
 This system is designed to provide a seamless experience for managing income, expenses, and accounts. It helps users gain insights into their spending habits through a clean and interactive interface.
 
-🔗 Live Demo: https://ammarsk22.github.io/expense-manager/login.html
+🔗 **Live Demo:**  
+https://ammarsk22.github.io/expense-manager/login.html
 
-✨ Key Features
+---
 
-🚀 New & Advanced Features
+## ✨ Key Features
 
-🎙️ Smart Voice Input: Add transactions effortlessly using voice commands! Just tap the mic and say "200 for Lunch" or "Salary 50000".
+### 🚀 New & Advanced Features
 
-🔄 Recurring Templates (Quick Fill): Save frequent transactions (like Rent, Netflix) as templates. Use the "Quick Fill" chips to add them in one click.
+- **🎙️ Smart Voice Input:** Add transactions effortlessly using voice commands like “200 for Lunch” or “Salary 50000”.
+- **🔄 Recurring Templates (Quick Fill):** Save frequent transactions (Rent, Netflix, etc.) and add them in one click.
+- **🎯 Savings Goals:** Set financial targets (Laptop, Vacation, etc.) and track savings visually.
+- **🤝 Debt Manager:** Maintain borrowed/lent money records so you never miss a pending payment.
+- **🌙 Dark Mode Support:** Fully supports system dark mode or manual toggle.
+- **📥 CSV Export:** Download complete transaction history as a CSV file.
+- **🧮 Built-in Calculator:** Perform quick calculations directly inside the Amount input.
+- **⚙️ Auto Setup:** Automatically creates default Accounts (Cash, Bank) and 20+ Categories for new users.
 
-🎯 Savings Goals: Set financial targets for specific goals (e.g., "New Laptop", "Vacation") and track your savings progress visually.
+---
 
-🤝 Debt Manager: Keep track of money you owe (Borrowed) or money owed to you (Lent). Never forget a pending payment again.
+## 🌟 Core Features
 
-🌙 Dark Mode Support: Fully integrated Dark Mode that respects your system settings or can be toggled manually for comfortable viewing at night.
+- **☁️ Cloud Sync (Firebase):** Real-time data storage accessible from any device.
+- **🔐 Secure Authentication:** Email/Password login via Firebase Auth.
+- **📊 Interactive Dashboard:** Category breakdown with dynamic pie charts.
+- **🏦 Multi-Account Management:** Handle Cash, Bank, Wallet, and transfer funds easily.
+- **📜 Advanced History & Search:** Filter by type, category, or keyword search.
+- **📈 Financial Analysis:** Daily, weekly, monthly, and yearly insights with charts.
 
-📥 Data Export (CSV): Export your complete transaction history to CSV format for use in Excel or Google Sheets.
+---
 
-🧮 In-Built Calculator: Perform quick calculations directly inside the Amount input field.
+## 📂 Project Structure
 
-⚙️ Auto-Setup: Automatically creates default Accounts (Cash, Bank) and 20+ Categories for new users.
+| File / Page       | Description |
+|------------------|-------------|
+| **login.html**      | User login & signup with frosted glass UI. |
+| **index.html**      | Dashboard with charts, quick fill, and voice input. |
+| **accounts.html**   | Manage accounts (add/edit/delete/transfer). |
+| **categories.html** | Manage custom categories. |
+| **history.html**    | View, filter, search, and export transactions. |
+| **analysis.html**   | Analyze spending with multiple time filters. |
+| **goals.html**      | New — Savings goals with progress tracking. |
+| **debt.html**       | New — Manage borrowed/lent records. |
+| **profile.html**    | Update profile details. |
+| **settings.html**   | Dark Mode + Monthly Budget settings. |
+| **assets/js/**      | Modular JavaScript for each feature. |
+| **assets/css/**     | Custom styles + Tailwind configs. |
 
-🌟 Core Features
+---
 
-☁️ Cloud Data Sync (Firebase): Real-time data storage. Access your finances from any device.
+## 🚀 How to Use
 
-🔐 Secure Authentication: Email/Password login powered by Firebase Auth.
+### **1. Sign Up / Login**
+- Create an account using Email/Password.
+- Default Accounts and Categories will be auto-created.
 
-📊 Interactive Dashboard: Visual breakdown of spending with dynamic Pie Charts and summary cards.
+### **2. Add a Transaction**
+- Enter details manually or use the Mic button for voice input.
+- Use “Save as Template” to reuse common transactions.
 
-🏦 Multi-Account Management: Manage 'Bank', 'Cash', 'Wallet' separately and transfer funds between them.
+### **3. Manage Your Finances**
+- Transfer money between accounts from the Accounts page.
+- Track borrowed/lent money from the Debts page.
+- Save for future purchases using the Goals page.
 
-📜 Advanced History & Search: Filter transactions by type, category, or search by keywords.
+### **4. Analyze & Export**
+- View detailed spending charts in the Analysis page.
+- Export your full transaction history as CSV from the History page.
 
-📈 Financial Analysis: Deep dive into spending habits with Daily, Weekly, Monthly, and Yearly views.
+---
 
-📂 Project Structure
+## 🧰 Technologies Used
 
-File
+- **Frontend:** HTML5, Tailwind CSS, Vanilla JavaScript  
+- **Backend:** Google Firebase  
+  - Firestore (Real-time NoSQL DB)  
+  - Firebase Authentication  
+- **Charts:** Chart.js  
+- **Icons:** FontAwesome
 
-Description
+---
 
-login.html
+## 👨‍💻 Developed By
 
-User Login & Signup page with a frosted glass effect.
+**Ammar Shaikh**  
+📧 Email: **ammarsk200422@gmail.com**  
+🌐 GitHub: **@Ammarsk22**
 
-index.html
+---
 
-The main dashboard with charts, quick fill, and voice input.
+## 📜 License
 
-accounts.html
-
-Manage financial accounts (add, edit, delete, transfer).
-
-categories.html
-
-Manage custom income/expense categories with suggestions.
-
-history.html
-
-View, filter, search, and export (CSV) past transactions.
-
-analysis.html
-
-Analyze spending with charts and various time-period filters.
-
-goals.html
-
-(New) Set and track savings goals with progress bars.
-
-debt.html
-
-(New) Manage lending and borrowing records.
-
-profile.html
-
-View and update user profile details.
-
-settings.html
-
-Manage app settings (Dark Mode, Monthly Budget).
-
-assets/js/
-
-Contains modular JavaScript logic for each feature.
-
-assets/css/
-
-Contains custom styles and Tailwind configurations.
-
-🚀 How to Use
-
-Sign Up / Login:
-
-Open the app and create a new account.
-
-The app will automatically set up default Accounts and Categories for you.
-
-Add a Transaction:
-
-On the Dashboard, type details manually or use the Mic button to speak.
-
-Check "Save as Template" to reuse this transaction later.
-
-Manage Finances:
-
-Use the Accounts page to transfer money between accounts.
-
-Use the Debts page to record loans given or taken.
-
-Use the Goals page to save for future purchases.
-
-Analyze & Export:
-
-Check the Analysis page for detailed charts.
-
-Go to History to download your data as a CSV file.
-
-🧰 Technologies Used
-
-Frontend: HTML5, Tailwind CSS, Vanilla JavaScript
-
-Backend (Cloud): Google Firebase
-
-Firestore Database: Real-time NoSQL database.
-
-Firebase Authentication: Secure user management.
-
-Charting Library: Chart.js
-
-Icons: FontAwesome
-
-👨‍💻 Developed By
-
-Ammar Shaikh
-
-📧 Email: ammarsk200422@gmail.com
-
-🌐 GitHub: @Ammarsk22
-
-📜 License
-
-This project is open-source and free to use under the MIT License.
+This project is open-source and free to use under the **MIT License**.
