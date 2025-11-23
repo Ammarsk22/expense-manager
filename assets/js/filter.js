@@ -24,6 +24,11 @@ function initializeHistoryPage(userId) {
     const transactionsRef = db.collection('users').doc(userId).collection('transactions');
     const categoriesRef = db.collection('users').doc(userId).collection('categories');
 
+    // Helper function to safely get currency
+    const getAppCurrency = () => {
+        return typeof getCurrency === 'function' ? getCurrency() : '₹';
+    };
+
     // --- Populate Category Filter Dropdown ---
     categoriesRef.orderBy('name').onSnapshot(snapshot => {
         filterCategorySelect.innerHTML = '<option value="all">All Categories</option>';
@@ -37,23 +42,32 @@ function initializeHistoryPage(userId) {
     const renderTransactions = (docs) => {
         transactionList.innerHTML = ''; // Clear the list first
         if (!docs || docs.length === 0) {
-            transactionList.innerHTML = '<p class="text-gray-500 text-center py-8">No transactions found for the selected filters.</p>';
+            transactionList.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-8">No transactions found for the selected filters.</p>';
             return;
         }
+
+        const currencySymbol = getAppCurrency();
+
         docs.forEach(doc => {
             const transaction = doc.data();
-            const amountColor = transaction.type === 'income' ? 'text-green-500' : 'text-red-500';
+            const amountColor = transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
             const amountSign = transaction.type === 'income' ? '+' : '-';
 
             const itemHTML = `
-                <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg shadow-sm">
+                <div class="flex justify-between items-center p-4 bg-white dark:bg-gray-700 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
                     <div>
-                        <p class="font-bold text-gray-800">${transaction.description}</p>
-                        <p class="text-sm text-gray-500">${transaction.accountName || 'N/A'} | ${transaction.category} on ${transaction.date}</p>
+                        <p class="font-bold text-gray-800 dark:text-gray-200">${transaction.description}</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            <span class="bg-gray-100 dark:bg-gray-600 px-2 py-0.5 rounded text-xs border border-gray-200 dark:border-gray-500">${transaction.category}</span>
+                            <span class="mx-1">•</span>
+                            ${transaction.account || 'N/A'} 
+                            <span class="mx-1">•</span> 
+                            ${transaction.date}
+                        </p>
                     </div>
                     <div class="flex items-center space-x-4">
-                        <p class="font-bold text-lg ${amountColor}">${amountSign} ₹${transaction.amount.toFixed(2)}</p>
-                        <button data-id="${doc.id}" class="delete-btn text-gray-400 hover:text-red-500">
+                        <p class="font-bold text-lg ${amountColor}">${amountSign} ${currencySymbol}${transaction.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                        <button data-id="${doc.id}" class="delete-btn text-gray-400 hover:text-red-500 transition-colors p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -65,9 +79,10 @@ function initializeHistoryPage(userId) {
 
     // --- Main Function to Fetch and Filter Transactions ---
     const applyFiltersAndSearch = async () => {
-        transactionList.innerHTML = '<p class="text-gray-500 text-center py-8">Loading transactions...</p>';
+        transactionList.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-8">Loading transactions...</p>';
         
-        let query = transactionsRef.orderBy('date', 'desc');
+        // UPDATED SORTING LOGIC: Sort by Date first, then by Created Time
+        let query = transactionsRef.orderBy('date', 'desc').orderBy('createdAt', 'desc');
 
         // Apply Firestore-level filters
         if (filterType.value !== 'all') {
@@ -88,7 +103,7 @@ function initializeHistoryPage(userId) {
                     const data = doc.data();
                     const description = data.description ? data.description.toLowerCase() : '';
                     const category = data.category ? data.category.toLowerCase() : '';
-                    const accountName = data.accountName ? data.accountName.toLowerCase() : '';
+                    const accountName = data.account ? data.account.toLowerCase() : ''; 
 
                     return description.includes(searchTerm) || 
                            category.includes(searchTerm) || 
@@ -100,7 +115,20 @@ function initializeHistoryPage(userId) {
 
         } catch (error) {
             console.error("Error fetching transactions: ", error);
-            transactionList.innerHTML = '<p class="text-red-500 text-center py-8">Error loading data. Please check console.</p>';
+            
+            // Handle missing index error
+            if (error.message.includes('The query requires an index')) {
+                const indexLink = error.message.match(/https:\/\/console\.firebase\.google\.com[^\s]*/)[0];
+                transactionList.innerHTML = `
+                    <div class="text-center py-8">
+                        <p class="text-red-500 mb-2">Error: Missing Index.</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">To fix sorting by Date + Time, click the link below to create the index in Firebase:</p>
+                        <a href="${indexLink}" target="_blank" class="text-indigo-600 underline">Create Index</a>
+                    </div>
+                `;
+            } else {
+                transactionList.innerHTML = '<p class="text-red-500 text-center py-8">Error loading data. Please check console.</p>';
+            }
         }
     };
 

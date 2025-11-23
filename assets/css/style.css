@@ -1,17 +1,40 @@
-/* Basic styling for smooth transition on sidebar */
-.sidebar {
+/* Custom Scrollbar for lists */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* Smooth Sidebar Transition */
+#sidebar {
     transition: transform 0.3s ease-in-out;
 }
 
-/* Initially hide sidebar on mobile */
-@media (max-width: 640px) {
-    .sidebar {
-        transform: translateX(-100%);
-        position: fixed; /* Keep it fixed on the screen */
-        height: 100vh;
-        z-index: 50; /* Ensure it's on top */
-    }
-    .sidebar-open {
-        transform: translateX(0);
-    }
+/* Hide scrollbar utility */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }

@@ -4,101 +4,127 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | Personal Expense Manager</title>
+    
+    <!-- Tailwind Config for Dark Mode -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#111827',
+                        darkCard: '#1F2937',
+                    }
+                }
+            }
+        }
+    </script>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
-<body class="font-sans">
+<body class="font-sans bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
     
-    <div class="fixed inset-0 bg-cover bg-center" style="background-image: url('assets/img/background.jpg');"></div>
-    <div class="fixed inset-0 bg-black/30"></div> <div class="relative min-h-screen flex flex-col items-center justify-center p-4">
+    <!-- Background Image with Overlay -->
+    <div class="fixed inset-0 bg-cover bg-center opacity-50 dark:opacity-20" style="background-image: url('assets/img/background.jpg');"></div>
+    <div class="fixed inset-0 bg-black/30 dark:bg-black/60"></div> 
 
-        <div class="w-full max-w-md bg-white/25 backdrop-blur-xl rounded-2xl shadow-lg p-8 border border-white/30">
+    <div class="relative min-h-screen flex flex-col items-center justify-center p-4">
+
+        <div class="w-full max-w-md bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-2xl shadow-xl p-8 border border-white/50 dark:border-gray-700">
 
             <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-gray-900">
-                    <i class="fas fa-wallet mr-2 text-indigo-600"></i>Personal Expense Manager
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                    <i class="fas fa-wallet mr-2 text-indigo-600 dark:text-indigo-400"></i>Expense Manager
                 </h1>
-                <p class="text-gray-700 mt-2">Sign in to manage your finances</p>
+                <p class="text-gray-600 dark:text-gray-300 mt-2">Sign in to manage your finances</p>
             </div>
             
+            <!-- Login Form -->
             <form id="login-form" class="space-y-6">
                 <div>
-                    <label for="login-email" class="block text-sm font-medium text-gray-800">Email Address</label>
+                    <label for="login-email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email Address</label>
                     <div class="mt-1">
-                        <input id="login-email" name="email" type="email" autocomplete="email" required class="w-full px-3 py-2 bg-white/20 border border-white/40 rounded-md shadow-sm text-gray-900 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <input id="login-email" name="email" type="email" autocomplete="email" required class="w-full px-3 py-2 bg-white/50 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
                 </div>
 
                 <div>
-                    <label for="login-password" class="block text-sm font-medium text-gray-800">Password</label>
+                    <label for="login-password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
                     <div class="mt-1">
-                        <input id="login-password" name="password" type="password" autocomplete="current-password" required class="w-full px-3 py-2 bg-white/20 border border-white/40 rounded-md shadow-sm text-gray-900 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <input id="login-password" name="password" type="password" autocomplete="current-password" required class="w-full px-3 py-2 bg-white/50 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
                 </div>
 
-                <div id="login-error" class="text-red-500 text-sm hidden font-medium"></div>
+                <div id="login-error" class="text-red-500 text-sm hidden font-medium bg-red-100 dark:bg-red-900/30 p-2 rounded"></div>
 
                 <div>
-                    <button type="submit" class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <button type="submit" class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
                         Sign in
                     </button>
                 </div>
             </form>
             
+            <!-- Signup Form -->
             <form id="signup-form" class="space-y-6 hidden">
                 <div>
-                    <label for="signup-email" class="block text-sm font-medium text-gray-800">Email Address</label>
+                    <label for="signup-email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email Address</label>
                     <div class="mt-1">
-                        <input id="signup-email" name="email" type="email" autocomplete="email" required class="w-full px-3 py-2 bg-white/20 border border-white/40 rounded-md shadow-sm text-gray-900 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <input id="signup-email" name="email" type="email" autocomplete="email" required class="w-full px-3 py-2 bg-white/50 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
                 </div>
 
                 <div>
-                    <label for="signup-password" class="block text-sm font-medium text-gray-800">Password</label>
+                    <label for="signup-password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
                     <div class="mt-1">
-                        <input id="signup-password" name="password" type="password" autocomplete="new-password" required class="w-full px-3 py-2 bg-white/20 border border-white/40 rounded-md shadow-sm text-gray-900 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <input id="signup-password" name="password" type="password" autocomplete="new-password" required class="w-full px-3 py-2 bg-white/50 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
                 </div>
                 
                  <div>
-                    <label for="signup-password-confirm" class="block text-sm font-medium text-gray-800">Confirm Password</label>
+                    <label for="signup-password-confirm" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Confirm Password</label>
                     <div class="mt-1">
-                        <input id="signup-password-confirm" name="password-confirm" type="password" autocomplete="new-password" required class="w-full px-3 py-2 bg-white/20 border border-white/40 rounded-md shadow-sm text-gray-900 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <input id="signup-password-confirm" name="password-confirm" type="password" autocomplete="new-password" required class="w-full px-3 py-2 bg-white/50 dark:bg-gray-700/50 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
                 </div>
 
-                <div id="signup-error" class="text-red-500 text-sm hidden font-medium"></div>
+                <div id="signup-error" class="text-red-500 text-sm hidden font-medium bg-red-100 dark:bg-red-900/30 p-2 rounded"></div>
 
                 <div>
-                    <button type="submit" class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <button type="submit" class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
                         Create Account
                     </button>
                 </div>
             </form>
 
             <div class="mt-6 text-center">
-                <p id="toggle-to-signup" class="text-sm text-gray-700">
-                    Don't have an account? <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">Sign Up</a>
+                <p id="toggle-to-signup" class="text-sm text-gray-600 dark:text-gray-400">
+                    Don't have an account? <a href="#" class="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 hover:underline">Sign Up</a>
                 </p>
-                <p id="toggle-to-login" class="text-sm text-gray-700 hidden">
-                    Already have an account? <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">Sign In</a>
+                <p id="toggle-to-login" class="text-sm text-gray-600 dark:text-gray-400 hidden">
+                    Already have an account? <a href="#" class="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 hover:underline">Sign In</a>
                 </p>
             </div>
         </div>
 
         <footer class="absolute bottom-4 text-center w-full">
-            <p class="text-gray-200 text-sm">
-                Developed by <span class="font-semibold">Ammar Shaikh</span> | 
-                <a href="mailto:ammarsk200422@gmail.com" class="text-indigo-300 hover:underline">ammarsk200422@gmail.com</a>
+            <p class="text-white text-sm drop-shadow-md">
+                Developed by <span class="font-semibold">Ammar Shaikh</span>
             </p>
         </footer>
     </div>
 
+    <!-- Scripts -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    
     <script src="assets/js/firebase.js"></script>
+    <script src="assets/js/theme.js"></script> <!-- Added Theme Script -->
     <script src="assets/js/auth.js"></script>
+    
     <script>
+        // Toggle Logic
         const loginForm = document.getElementById('login-form');
         const signupForm = document.getElementById('signup-form');
         const toggleToSignup = document.getElementById('toggle-to-signup');

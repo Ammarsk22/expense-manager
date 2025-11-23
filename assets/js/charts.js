@@ -45,10 +45,11 @@ function initializeDashboard(userId) {
 
         const balance = totalIncome - totalExpense;
 
-        // --- Update Summary Cards ---
-        totalIncomeEl.textContent = `₹${totalIncome.toFixed(2)}`;
-        totalExpenseEl.textContent = `₹${totalExpense.toFixed(2)}`;
-        balanceEl.textContent = `₹${balance.toFixed(2)}`;
+        // --- Update Summary Cards (Hardcoded Rupee) ---
+        totalIncomeEl.textContent = `₹${totalIncome.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        totalExpenseEl.textContent = `₹${totalExpense.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        balanceEl.textContent = `₹${balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        
         balanceEl.classList.toggle('text-red-500', balance < 0);
         balanceEl.classList.toggle('text-blue-500', balance >= 0);
 
@@ -67,6 +68,10 @@ function updatePieChart(ctx, data) {
         expensePieChart.destroy(); // Destroy old chart before drawing new one
     }
 
+    // Determine text color based on Dark Mode
+    const isDarkMode = document.documentElement.classList.contains('dark');
+    const textColor = isDarkMode ? '#e5e7eb' : '#374151';
+
     expensePieChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -78,7 +83,7 @@ function updatePieChart(ctx, data) {
                     '#EF4444', '#3B82F6', '#F59E0B', '#10B981', '#8B5CF6',
                     '#EC4899', '#6366F1', '#F97316', '#06B6D4', '#D946EF'
                 ],
-                borderColor: '#FFFFFF',
+                borderColor: isDarkMode ? '#1f2937' : '#FFFFFF',
                 borderWidth: 2
             }]
         },
@@ -86,7 +91,12 @@ function updatePieChart(ctx, data) {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { position: 'top' },
+                legend: { 
+                    position: 'right',
+                    labels: {
+                        color: textColor
+                    }
+                },
                 title: { display: false }
             }
         }

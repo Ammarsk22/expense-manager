@@ -31,7 +31,33 @@ function initializeAccountsPage(userId) {
     const accountsRef = db.collection('users').doc(userId).collection('accounts');
     const transactionsRef = db.collection('users').doc(userId).collection('transactions');
 
-    // --- ADD NEW ACCOUNT ---
+    // --- 1. AUTO-ADD DEFAULT ACCOUNTS (If none exist) ---
+    accountsRef.get().then(snapshot => {
+        if (snapshot.empty) {
+            console.log("No accounts found. Creating defaults...");
+            const batch = db.batch();
+            
+            const defaultAccounts = [
+                { name: 'Cash', type: 'Cash', openingBalance: 0 },
+                { name: 'Bank Account', type: 'Bank Account', openingBalance: 0 },
+                { name: 'Digital Wallet', type: 'Wallet', openingBalance: 0 }
+            ];
+
+            defaultAccounts.forEach(acc => {
+                const newDocRef = accountsRef.doc();
+                batch.set(newDocRef, {
+                    ...acc,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            });
+
+            batch.commit().then(() => {
+                console.log("Default accounts created successfully.");
+            }).catch(err => console.error("Error creating default accounts:", err));
+        }
+    });
+
+    // --- 2. ADD NEW ACCOUNT (Manual) ---
     addAccountForm.addEventListener('submit', e => {
         e.preventDefault();
         const accountName = addAccountForm['account-name'].value;
@@ -51,15 +77,18 @@ function initializeAccountsPage(userId) {
         }).catch(error => console.error("Error adding account: ", error));
     });
 
-    // --- DISPLAY ACCOUNTS & CALCULATE BALANCES ---
+    // --- 3. DISPLAY ACCOUNTS & CALCULATE BALANCES ---
     const refreshAccountsAndBalances = () => {
         Promise.all([
             accountsRef.orderBy('name').get(),
             transactionsRef.get()
         ]).then(([accountsSnapshot, transactionsSnapshot]) => {
             accountsListEl.innerHTML = '';
+            fromAccountSelect.innerHTML = '';
+            toAccountSelect.innerHTML = '';
+
             if (accountsSnapshot.empty) {
-                accountsListEl.innerHTML = '<p class="text-gray-500">No accounts found. Add one to get started!</p>';
+                accountsListEl.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-4">Creating default accounts...</p>';
                 return;
             }
 
@@ -69,31 +98,42 @@ function initializeAccountsPage(userId) {
             accountsSnapshot.forEach(doc => {
                 const account = doc.data();
                 const accountId = doc.id;
-                let balance = account.openingBalance || 0;
+                
+                // Start with opening balance or fallback to 0
+                let initialBalance = (account.openingBalance !== undefined) ? account.openingBalance : 0;
+                let currentBalance = initialBalance;
 
+                // Calculate live balance from transactions
                 transactionsSnapshot.forEach(tDoc => {
                     const t = tDoc.data();
                     if (t.accountId === accountId) {
-                        if (t.type === 'income') balance += t.amount;
-                        else if (t.type === 'expense') balance -= t.amount;
+                        if (t.type === 'income') currentBalance += t.amount;
+                        else if (t.type === 'expense') currentBalance -= t.amount;
                     }
                 });
                 
-                const balanceColor = balance >= 0 ? 'text-green-600' : 'text-red-600';
+                const balanceColor = currentBalance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
 
+                // Create List Item with Rupee Symbol
                 html += `
-                    <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg shadow-sm">
+                    <div class="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg shadow-sm border border-gray-100 dark:border-gray-600 transition-colors">
                         <div>
-                            <p class="font-bold text-gray-800">${account.name}</p>
-                            <p class="text-sm text-gray-500">${account.type}</p>
+                            <p class="font-bold text-gray-800 dark:text-gray-200 text-lg">${account.name}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-600 px-2 py-0.5 rounded inline-block border border-gray-200 dark:border-gray-500 mt-1">${account.type}</p>
                         </div>
                         <div class="flex items-center space-x-4">
-                             <div class="text-right">
-                                <p class="font-bold text-lg ${balanceColor}">₹${balance.toFixed(2)}</p>
-                                <p class="text-xs text-gray-400">Current Balance</p>
+                             <div class="text-right mr-2">
+                                <p class="font-bold text-lg ${balanceColor}">₹${currentBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+                                <p class="text-xs text-gray-400 uppercase tracking-wider">Balance</p>
                             </div>
-                            <button data-id="${accountId}" class="edit-account-btn text-gray-400 hover:text-blue-500"><i class="fas fa-edit"></i></button>
-                            <button data-id="${accountId}" class="delete-account-btn text-gray-400 hover:text-red-500"><i class="fas fa-trash"></i></button>
+                            <div class="flex space-x-1">
+                                <button data-id="${accountId}" class="edit-account-btn p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full transition-colors" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button data-id="${accountId}" class="delete-account-btn p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -106,10 +146,11 @@ function initializeAccountsPage(userId) {
         });
     };
     
+    // Listen for changes
     accountsRef.onSnapshot(refreshAccountsAndBalances);
     transactionsRef.onSnapshot(refreshAccountsAndBalances);
 
-    // --- ACCOUNT TO ACCOUNT TRANSFER ---
+    // --- 4. ACCOUNT TO ACCOUNT TRANSFER ---
     transferForm.addEventListener('submit', e => {
         e.preventDefault();
         const fromAccountId = fromAccountSelect.value;
@@ -128,6 +169,7 @@ function initializeAccountsPage(userId) {
         const date = new Date().toISOString().split('T')[0];
         const batch = db.batch();
 
+        // Create Expense Entry (Money leaving)
         const expenseRef = transactionsRef.doc();
         batch.set(expenseRef, {
             type: 'expense', category: 'Transfer', description: `Transfer to ${toAccountName}`,
@@ -135,6 +177,7 @@ function initializeAccountsPage(userId) {
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         
+        // Create Income Entry (Money entering)
         const incomeRef = transactionsRef.doc();
         batch.set(incomeRef, {
             type: 'income', category: 'Transfer', description: `Transfer from ${fromAccountName}`,
@@ -145,13 +188,14 @@ function initializeAccountsPage(userId) {
         batch.commit().then(() => {
             console.log("Transfer successful!");
             transferForm.reset();
+            alert("Funds transferred successfully!");
         }).catch(error => {
             console.error("Transfer failed: ", error);
             alert("Transfer failed. Please try again.");
         });
     });
 
-    // --- EDIT & DELETE LOGIC ---
+    // --- 5. EDIT & DELETE LOGIC ---
     accountsListEl.addEventListener('click', async (e) => {
         const editBtn = e.target.closest('.edit-account-btn');
         const deleteBtn = e.target.closest('.delete-account-btn');
@@ -164,7 +208,8 @@ function initializeAccountsPage(userId) {
                 const account = doc.data();
                 editAccountId.value = id;
                 editAccountName.value = account.name;
-                editOpeningBalance.value = account.openingBalance;
+                // Use openingBalance if available, otherwise fallback to 0
+                editOpeningBalance.value = (account.openingBalance !== undefined) ? account.openingBalance : 0;
                 editAccountType.value = account.type;
                 editModal.classList.remove('hidden');
                 editModal.classList.add('modal-active');
@@ -174,6 +219,7 @@ function initializeAccountsPage(userId) {
         // Handle Delete
         if (deleteBtn) {
             const id = deleteBtn.dataset.id;
+            // Check if account has transactions before deleting
             const associatedTransactions = await transactionsRef.where('accountId', '==', id).limit(1).get();
 
             if (!associatedTransactions.empty) {
@@ -187,7 +233,7 @@ function initializeAccountsPage(userId) {
         }
     });
 
-    // --- EDIT MODAL LOGIC ---
+    // --- 6. EDIT MODAL LOGIC ---
     const closeModal = () => {
         editModal.classList.add('hidden');
         editModal.classList.remove('modal-active');

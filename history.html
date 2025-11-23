@@ -4,13 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>History | Personal Expense Manager</title>
+    
+    <!-- Tailwind CSS with Dark Mode Configuration -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#111827', // Gray-900
+                        darkCard: '#1F2937', // Gray-800
+                    }
+                }
+            }
+        }
+    </script>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
-<body class="font-sans" style="background-color: #EAE5E1;">
+<body class="font-sans bg-[#EAE5E1] dark:bg-gray-900 transition-colors duration-200">
 
     <div class="relative min-h-screen md:flex">
+        <!-- Mobile Header -->
         <div class="md:hidden flex justify-between items-center bg-gray-800 text-white p-4">
             <h1 class="text-xl font-bold"><i class="fas fa-wallet mr-2"></i>Expense Manager</h1>
             <button id="menu-button" class="focus:outline-none">
@@ -18,6 +35,7 @@
             </button>
         </div>
 
+        <!-- Sidebar -->
         <aside id="sidebar" class="w-64 bg-gray-800 text-white flex-col fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50">
             <div class="p-4 border-b border-gray-700 hidden md:block">
                 <h1 class="text-xl font-bold"><i class="fas fa-wallet mr-2"></i>Personal Expense Manager</h1>
@@ -26,8 +44,16 @@
                 <a href="index.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-chart-pie mr-3"></i>Dashboard</a>
                 <a href="analysis.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-chart-line mr-3"></i>Analysis</a>
                 <a href="accounts.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-university mr-3"></i>Accounts</a>
+                
+                <!-- NEW: Goals & Debts Links -->
+                <a href="goals.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-bullseye mr-3"></i>Goals</a>
+                <a href="debt.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-hand-holding-usd mr-3"></i>Debts</a>
+                
                 <a href="categories.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-tags mr-3"></i>Categories</a>
+                
+                <!-- History Link (Active) -->
                 <a href="history.html" class="flex items-center px-4 py-2 text-gray-100 bg-gray-700 rounded-md"><i class="fas fa-history mr-3"></i>History</a>
+                
                 <a href="profile.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-user-circle mr-3"></i>Profile</a>
                 <a href="settings.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-cog mr-3"></i>Settings</a>
             </nav>
@@ -36,60 +62,86 @@
             </div>
         </aside>
 
+        <!-- Main Content -->
         <main class="flex-1 p-6 md:p-10 overflow-y-auto">
-            <header class="mb-8">
-                <h2 class="text-3xl font-bold text-gray-800">Transaction History</h2>
-                <p class="text-gray-500">View and filter your past transactions.</p>
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Transaction History</h2>
+                    <p class="text-gray-500 dark:text-gray-400">View, search, and export your past transactions.</p>
+                </div>
+                
+                <!-- Export Button -->
+                <button id="export-btn" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors shadow-sm flex items-center">
+                    <i class="fas fa-file-csv mr-2"></i> Export CSV
+                </button>
             </header>
 
-            <section class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <!-- Search & Filters Section -->
+            <section class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-8 transition-colors duration-200">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                    
+                    <!-- Search Input -->
                     <div class="lg:col-span-2">
-                        <label for="search-term" class="block text-sm font-medium text-gray-700">Search</label>
-                        <input type="text" id="search-term" placeholder="Search by note, category, account..." class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
+                        <label for="search-term" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Search</label>
+                        <input type="text" id="search-term" placeholder="Search by note, category, account..." class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
+                    
+                    <!-- Filter by Type -->
                     <div>
-                        <label for="filter-type" class="block text-sm font-medium text-gray-700">Type</label>
-                        <select id="filter-type" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
+                        <label for="filter-type" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Type</label>
+                        <select id="filter-type" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
                             <option value="all">All Types</option>
                             <option value="income">Income</option>
                             <option value="expense">Expense</option>
                         </select>
                     </div>
+                    
+                    <!-- Filter by Category -->
                     <div>
-                        <label for="filter-category" class="block text-sm font-medium text-gray-700">Category</label>
-                        <select id="filter-category" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500">
+                        <label for="filter-category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
+                        <select id="filter-category" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
                             <option value="all">All Categories</option>
+                            <!-- Options populated by JS -->
                         </select>
                     </div>
+                    
+                    <!-- Action Buttons -->
                     <div class="flex items-end space-x-2">
-                        <button id="filter-button" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700">Search</button>
-                        <button id="reset-button" class="w-full bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300">Reset</button>
+                        <button id="filter-button" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition-colors shadow-sm">Search</button>
+                        <button id="reset-button" class="w-full bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 transition-colors shadow-sm">Reset</button>
                     </div>
                 </div>
             </section>
 
-            <section class="bg-white p-6 rounded-lg shadow-md">
+            <!-- Transaction List Section -->
+            <section class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md transition-colors duration-200">
                 <div id="history-transaction-list" class="space-y-3">
-                    <p class="text-gray-500 text-center py-8">Loading transactions...</p>
+                    <!-- List items populated by filter.js -->
+                    <p class="text-gray-500 dark:text-gray-400 text-center py-8">Loading transactions...</p>
                 </div>
             </section>
 
             <footer class="text-center mt-12">
-                <p class="text-gray-500 text-sm">
+                <p class="text-gray-500 dark:text-gray-400 text-sm">
                     Developed by <span class="font-semibold">Ammar Shaikh</span> | 
-                    <a href="mailto:ammarsk200422@gmail.com" class="text-indigo-600 hover:underline">ammarsk200422@gmail.com</a>
+                    <a href="mailto:ammarsk200422@gmail.com" class="text-indigo-600 dark:text-indigo-400 hover:underline">ammarsk200422@gmail.com</a>
                 </p>
             </footer>
         </main>
     </div>
 
+    <!-- Scripts -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    
     <script src="assets/js/firebase.js"></script>
     <script src="assets/js/auth.js"></script>
-    <script src="assets/js/main.js"></script>
-    <script src="assets/js/filter.js"></script>
+    <script src="assets/js/main.js"></script>   
+    <script src="assets/js/filter.js"></script> 
+    
+    <!-- Theme & Export Scripts -->
+    <script src="assets/js/theme.js"></script>
+    <script src="assets/js/export.js"></script>
 </body>
 </html>

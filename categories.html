@@ -4,12 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Categories | Personal Expense Manager</title>
+    
+    <!-- Tailwind CSS with Dark Mode Configuration -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#111827', // Gray-900
+                        darkCard: '#1F2937', // Gray-800
+                    }
+                }
+            }
+        }
+    </script>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
-<body class="font-sans" style="background-color: #EAE5E1;">
+<body class="font-sans bg-[#EAE5E1] dark:bg-gray-900 transition-colors duration-200">
+
     <div class="relative min-h-screen md:flex">
+        <!-- Mobile Header -->
         <div class="md:hidden flex justify-between items-center bg-gray-800 text-white p-4">
             <h1 class="text-xl font-bold"><i class="fas fa-wallet mr-2"></i>Expense Manager</h1>
             <button id="menu-button" class="focus:outline-none">
@@ -17,6 +35,7 @@
             </button>
         </div>
 
+        <!-- Sidebar -->
         <aside id="sidebar" class="w-64 bg-gray-800 text-white flex-col fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50">
             <div class="p-4 border-b border-gray-700 hidden md:block">
                 <h1 class="text-xl font-bold"><i class="fas fa-wallet mr-2"></i>Personal Expense Manager</h1>
@@ -25,7 +44,12 @@
                 <a href="index.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-chart-pie mr-3"></i>Dashboard</a>
                 <a href="analysis.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-chart-line mr-3"></i>Analysis</a>
                 <a href="accounts.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-university mr-3"></i>Accounts</a>
+                <a href="goals.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-bullseye mr-3"></i>Goals</a>
+                <a href="debt.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-hand-holding-usd mr-3"></i>Debts</a>
+                
+                <!-- Categories Link (Active) -->
                 <a href="categories.html" class="flex items-center px-4 py-2 text-gray-100 bg-gray-700 rounded-md"><i class="fas fa-tags mr-3"></i>Categories</a>
+                
                 <a href="history.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-history mr-3"></i>History</a>
                 <a href="profile.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-user-circle mr-3"></i>Profile</a>
                 <a href="settings.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-cog mr-3"></i>Settings</a>
@@ -35,48 +59,84 @@
             </div>
         </aside>
 
+        <!-- Main Content -->
         <main class="flex-1 p-6 md:p-10 overflow-y-auto">
             <header class="mb-8">
-                <h2 class="text-3xl font-bold text-gray-800">Manage Categories</h2>
-                <p class="text-gray-500">Add and organize your income and expense categories.</p>
+                <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Manage Categories</h2>
+                <p class="text-gray-500 dark:text-gray-400">Add and organize your income and expense categories.</p>
             </header>
+            
             <section class="grid lg:grid-cols-2 gap-8">
-                <div class="bg-white p-6 rounded-lg shadow-md">
+                <!-- Expense Categories -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md transition-colors duration-200 flex flex-col h-full">
                     <h3 class="text-2xl font-bold mb-4 text-red-500">Expense Categories</h3>
-                    <form id="add-expense-category-form" class="flex gap-2 mb-4">
-                        <input type="text" id="expense-category-name" required class="flex-grow block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm" placeholder="e.g., Groceries">
-                        <button type="submit" class="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600">Add</button>
+                    
+                    <!-- Input Form -->
+                    <form id="add-expense-category-form" class="flex gap-2 mb-3">
+                        <input type="text" id="expense-category-name" required class="flex-grow block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-red-500" placeholder="e.g., Groceries">
+                        <button type="submit" class="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 transition-colors">Add</button>
                     </form>
-                    <div id="expense-categories-list" class="space-y-3 max-h-96 overflow-y-auto">
-                        <p class="text-gray-500">Loading categories...</p>
+
+                    <!-- NEW: Suggested Expense Chips -->
+                    <div class="mb-4">
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mb-2 uppercase font-semibold">Quick Add:</p>
+                        <div id="expense-suggestions" class="flex flex-wrap gap-2">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <div class="border-t border-gray-200 dark:border-gray-700 my-2"></div>
+
+                    <!-- List -->
+                    <div id="expense-categories-list" class="space-y-3 max-h-80 overflow-y-auto flex-grow">
+                        <p class="text-gray-500 dark:text-gray-400">Loading categories...</p>
                     </div>
                 </div>
-                <div class="bg-white p-6 rounded-lg shadow-md">
+
+                <!-- Income Categories -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md transition-colors duration-200 flex flex-col h-full">
                     <h3 class="text-2xl font-bold mb-4 text-green-500">Income Categories</h3>
-                    <form id="add-income-category-form" class="flex gap-2 mb-4">
-                        <input type="text" id="income-category-name" required class="flex-grow block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm" placeholder="e.g., Salary">
-                        <button type="submit" class="bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600">Add</button>
+                    
+                    <!-- Input Form -->
+                    <form id="add-income-category-form" class="flex gap-2 mb-3">
+                        <input type="text" id="income-category-name" required class="flex-grow block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-green-500" placeholder="e.g., Salary">
+                        <button type="submit" class="bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 transition-colors">Add</button>
                     </form>
-                    <div id="income-categories-list" class="space-y-3 max-h-96 overflow-y-auto">
-                        <p class="text-gray-500">Loading categories...</p>
+
+                    <!-- NEW: Suggested Income Chips -->
+                    <div class="mb-4">
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mb-2 uppercase font-semibold">Quick Add:</p>
+                        <div id="income-suggestions" class="flex flex-wrap gap-2">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <div class="border-t border-gray-200 dark:border-gray-700 my-2"></div>
+
+                    <!-- List -->
+                    <div id="income-categories-list" class="space-y-3 max-h-80 overflow-y-auto flex-grow">
+                        <p class="text-gray-500 dark:text-gray-400">Loading categories...</p>
                     </div>
                 </div>
             </section>
 
             <footer class="text-center mt-12">
-                <p class="text-gray-500 text-sm">
+                <p class="text-gray-500 dark:text-gray-400 text-sm">
                     Developed by <span class="font-semibold">Ammar Shaikh</span> | 
-                    <a href="mailto:ammarsk200422@gmail.com" class="text-indigo-600 hover:underline">ammarsk200422@gmail.com</a>
+                    <a href="mailto:ammarsk200422@gmail.com" class="text-indigo-600 dark:text-indigo-400 hover:underline">ammarsk200422@gmail.com</a>
                 </p>
             </footer>
         </main>
     </div>
+    
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    
     <script src="assets/js/firebase.js"></script>
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/main.js"></script>
-    <script src="assets/js/categories.js"></script>
+    <script src="assets/js/categories.js"></script> <!-- NEW LOGIC HERE -->
+    <script src="assets/js/theme.js"></script>
 </body>
 </html>

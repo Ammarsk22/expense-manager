@@ -56,6 +56,8 @@ function checkBudgetStatus(userId) {
     const transactionsRef = db.collection('users').doc(userId).collection('transactions');
     const budgetAlertEl = document.getElementById('budget-alert');
 
+    if (!budgetAlertEl) return;
+
     budgetRef.get().then(budgetDoc => {
         if (!budgetDoc.exists) { return; } // No budget set
 
@@ -74,16 +76,21 @@ function checkBudgetStatus(userId) {
 
                 const percentageSpent = (currentMonthExpenses / budgetAmount) * 100;
 
+                // Format numbers nicely (e.g. 1,200.00)
+                const fmtExpense = currentMonthExpenses.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                const fmtBudget = budgetAmount.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
                 if (percentageSpent >= 100) {
-                    budgetAlertEl.className = 'p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-100 block';
-                    budgetAlertEl.innerHTML = `<span class="font-medium">Budget Alert!</span> You have spent ₹${currentMonthExpenses.toFixed(2)}, exceeding your budget of ₹${budgetAmount}.`;
+                    // Red Alert (Over Budget)
+                    budgetAlertEl.className = 'p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-100 dark:bg-red-900/50 dark:text-red-300 block border border-red-200 dark:border-red-800';
+                    budgetAlertEl.innerHTML = `<span class="font-bold"><i class="fas fa-exclamation-circle mr-2"></i>Budget Alert!</span> You have spent ₹${fmtExpense}, exceeding your budget of ₹${fmtBudget}.`;
                 } else if (percentageSpent >= 80) {
-                    budgetAlertEl.className = 'p-4 mb-4 text-sm text-yellow-800 rounded-lg bg-yellow-50 block';
-                    budgetAlertEl.innerHTML = `<span class="font-medium">Budget Warning!</span> You have spent ₹${currentMonthExpenses.toFixed(2)} (${percentageSpent.toFixed(0)}%) of your ₹${budgetAmount} budget.`;
+                    // Yellow Warning (Near Budget)
+                    budgetAlertEl.className = 'p-4 mb-4 text-sm text-yellow-800 rounded-lg bg-yellow-50 dark:bg-yellow-900/50 dark:text-yellow-300 block border border-yellow-200 dark:border-yellow-800';
+                    budgetAlertEl.innerHTML = `<span class="font-bold"><i class="fas fa-exclamation-triangle mr-2"></i>Budget Warning!</span> You have spent ₹${fmtExpense} (${percentageSpent.toFixed(0)}%) of your ₹${fmtBudget} budget.`;
                 } else {
                     budgetAlertEl.className = 'hidden';
                 }
             });
     });
 }
-

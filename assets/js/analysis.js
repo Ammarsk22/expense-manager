@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 let expenseChart = null;
 let currentDate = new Date();
-// --- Settings State ---
 let settings = {
     viewMode: 'monthly',
     showTotal: true,
@@ -38,8 +37,6 @@ function initializeAnalysisPage(userId) {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
         
-        // Date range calculation (same as before)
-        // [omitted for brevity - it's the same logic as the previous JS code]
         switch (settings.viewMode) {
             case 'daily':
                 startDate = new Date(year, month, currentDate.getDate());
@@ -48,7 +45,7 @@ function initializeAnalysisPage(userId) {
                 break;
             case 'weekly':
                 const dayOfWeek = currentDate.getDay();
-                const diff = currentDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // adjust when day is sunday
+                const diff = currentDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); 
                 startDate = new Date(currentDate.setDate(diff));
                 endDate = new Date(startDate);
                 endDate.setDate(startDate.getDate() + 6);
@@ -75,7 +72,6 @@ function initializeAnalysisPage(userId) {
         const startStr = startDate.toISOString().split('T')[0];
         const endStr = endDate.toISOString().split('T')[0];
 
-        // --- Carry Over Logic ---
         let carryOverAmount = 0;
         if (settings.carryOver && settings.viewMode === 'monthly') {
             const prevMonthDate = new Date(year, month - 1, 1);
@@ -99,30 +95,31 @@ function initializeAnalysisPage(userId) {
             }
         });
 
-        // Update UI
-        totalIncomeEl.textContent = `₹${totalIncome.toFixed(2)}`;
-        totalExpenseEl.textContent = `₹${totalExpense.toFixed(2)}`;
+        // Reverted to Rupee Symbol
+        totalIncomeEl.textContent = `₹${totalIncome.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        totalExpenseEl.textContent = `₹${totalExpense.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         const balance = totalIncome - totalExpense + carryOverAmount;
-        balanceEl.textContent = `₹${balance.toFixed(2)}`;
+        balanceEl.textContent = `₹${balance.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         balanceEl.classList.toggle('text-red-500', balance < 0);
         
         renderExpenseList(expenseByCategory, totalExpense);
         if (chartCanvas) renderExpenseChart(chartCanvas, expenseByCategory);
     };
     
-    // (renderExpenseList and renderExpenseChart functions are unchanged)
     const renderExpenseList = (data, total) => {
         expenseListEl.innerHTML = '';
         if (Object.keys(data).length === 0) {
-            expenseListEl.innerHTML = '<p class="text-gray-500">No expense data for this period.</p>';
+            expenseListEl.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center">No expense data for this period.</p>';
             return;
         }
         const sortedCategories = Object.entries(data).sort((a, b) => b[1] - a[1]);
         sortedCategories.forEach(([category, amount]) => {
             const percentage = total > 0 ? ((amount / total) * 100).toFixed(2) : 0;
-            expenseListEl.innerHTML += `<div class="flex items-center justify-between"><div><p class="font-bold">${category}</p><div class="w-full bg-gray-200 rounded-full h-2.5 mt-1"><div class="bg-indigo-600 h-2.5 rounded-full" style="width: ${percentage}%"></div></div></div><div class="text-right"><p class="font-semibold text-red-500">- ₹${amount.toFixed(2)}</p><p class="text-sm text-gray-500">${percentage}%</p></div></div>`;
+            // Reverted to Rupee Symbol
+            expenseListEl.innerHTML += `<div class="flex items-center justify-between p-2 border-b border-gray-100 dark:border-gray-700"><div><p class="font-bold text-gray-800 dark:text-gray-200">${category}</p><div class="w-24 bg-gray-200 dark:bg-gray-600 rounded-full h-1.5 mt-1"><div class="bg-indigo-600 h-1.5 rounded-full" style="width: ${percentage}%"></div></div></div><div class="text-right"><p class="font-semibold text-red-500">- ₹${amount.toLocaleString('en-IN', {minimumFractionDigits: 2})}</p><p class="text-xs text-gray-500 dark:text-gray-400">${percentage}%</p></div></div>`;
         });
     };
+
     const renderExpenseChart = (ctx, data) => {
         if (expenseChart) expenseChart.destroy();
         expenseChart = new Chart(ctx, {
@@ -131,42 +128,39 @@ function initializeAnalysisPage(userId) {
                 labels: Object.keys(data),
                 datasets: [{ data: Object.values(data), backgroundColor: ['#EF4444', '#3B82F6', '#F59E0B', '#10B981', '#8B5CF6', '#EC4899'], borderColor: '#FFFFFF', borderWidth: 2 }]
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#374151' } } } }
         });
     };
 
+    // UI Updates
     const updateOptionsUI = () => {
-        // View Mode
         viewModeOptions.querySelectorAll('p').forEach(p => {
-            p.classList.remove('font-bold', 'text-indigo-600');
+            p.classList.remove('font-bold', 'text-indigo-600', 'dark:text-indigo-400');
             p.innerHTML = p.dataset.mode.replace('-', ' ').toUpperCase();
             if (p.dataset.mode === settings.viewMode) {
-                p.classList.add('font-bold', 'text-indigo-600');
+                p.classList.add('font-bold', 'text-indigo-600', 'dark:text-indigo-400');
                 p.innerHTML = `<i class="fas fa-check mr-2"></i>${p.innerHTML}`;
             }
         });
-        // Show Total
         showTotalOptions.querySelectorAll('p').forEach(p => {
-            p.classList.remove('font-bold', 'text-indigo-600');
+            p.classList.remove('font-bold', 'text-indigo-600', 'dark:text-indigo-400');
             p.innerHTML = p.dataset.option === 'true' ? 'YES' : 'NO';
             if (String(settings.showTotal) === p.dataset.option) {
-                p.classList.add('font-bold', 'text-indigo-600');
+                p.classList.add('font-bold', 'text-indigo-600', 'dark:text-indigo-400');
                 p.innerHTML = `<i class="fas fa-check mr-2"></i>${p.innerHTML}`;
             }
         });
-        // Carry Over
         carryOverOptions.querySelectorAll('p').forEach(p => {
-            p.classList.remove('font-bold', 'text-indigo-600');
+            p.classList.remove('font-bold', 'text-indigo-600', 'dark:text-indigo-400');
             p.innerHTML = p.dataset.option === 'true' ? 'ON' : 'OFF';
             if (String(settings.carryOver) === p.dataset.option) {
-                p.classList.add('font-bold', 'text-indigo-600');
+                p.classList.add('font-bold', 'text-indigo-600', 'dark:text-indigo-400');
                 p.innerHTML = `<i class="fas fa-check mr-2"></i>${p.innerHTML}`;
             }
         });
         summaryCards.style.display = settings.showTotal ? 'grid' : 'none';
     };
 
-    // --- Event Listeners ---
     prevPeriodBtn.addEventListener('click', () => {
         if (settings.viewMode === 'daily') currentDate.setDate(currentDate.getDate() - 1);
         else if (settings.viewMode === 'weekly') currentDate.setDate(currentDate.getDate() - 7);
@@ -215,6 +209,5 @@ function initializeAnalysisPage(userId) {
         }
     });
 
-    // Initial Load
     fetchAndDisplayData();
 }

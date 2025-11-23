@@ -1,103 +1,149 @@
-# 💰 Personal Expense Manager
+💰 Personal Expense Manager
 
-A modern, responsive, and cloud-powered web application for tracking personal finances, built with **HTML, Tailwind CSS, Vanilla JavaScript,** and **Firebase**.
+A modern, responsive, and cloud-powered web application for tracking personal finances, built with HTML, Tailwind CSS, Vanilla JavaScript, and Firebase.
 
 This system is designed to provide a seamless experience for managing income, expenses, and accounts. It helps users gain insights into their spending habits through a clean and interactive interface.
 
-🔗 **Live Demo:** [**https://ammarsk22.github.io/expense-manager/login.html**](https://ammarsk22.github.io/expense-manager/login.html)
+🔗 Live Demo: https://ammarsk22.github.io/expense-manager/login.html
 
----
+✨ Key Features
 
-## ✨ Key Features
+🚀 New & Advanced Features
 
-☁️ **Cloud Data Sync (Firebase Firestore):**
-All your transactions, accounts, and categories are safely stored in the cloud. Access your financial data anytime, anywhere, and from any device.
+🎙️ Smart Voice Input: Add transactions effortlessly using voice commands! Just tap the mic and say "200 for Lunch" or "Salary 50000".
 
-🔐 **Secure User Authentication:**
-Email/Password-based login and signup powered by Firebase Authentication ensures that your financial data is private and secure.
+🔄 Recurring Templates (Quick Fill): Save frequent transactions (like Rent, Netflix) as templates. Use the "Quick Fill" chips to add them in one click.
 
-📊 **Interactive Dashboard:**
-Get an at-a-glance summary of your total income, expenses, and current balance. View recent transactions and a visual breakdown of your spending with an interactive pie chart.
+🎯 Savings Goals: Set financial targets for specific goals (e.g., "New Laptop", "Vacation") and track your savings progress visually.
 
-💸 **Full Transaction Management:**
-Easily add income or expense transactions. The system supports descriptions, dates, amounts, and categorization for detailed tracking.
+🤝 Debt Manager: Keep track of money you owe (Borrowed) or money owed to you (Lent). Never forget a pending payment again.
 
-🏦 **Multi-Account Handling:**
-Create and manage multiple accounts like 'Bank', 'Cash', or 'Wallet'. View individual balances, perform seamless fund transfers, and edit or delete accounts.
+🌙 Dark Mode Support: Fully integrated Dark Mode that respects your system settings or can be toggled manually for comfortable viewing at night.
 
-🏷️ **Custom Category Management:**
-Organize your finances by creating custom categories for both income (e.g., Salary, Freelance) and expenses (e.g., Food, Travel, Bills).
+📥 Data Export (CSV): Export your complete transaction history to CSV format for use in Excel or Google Sheets.
 
-📜 **Advanced Transaction History:**
-Browse your complete transaction history with powerful filter options. **Search for specific records** by description, category, or account name.
+🧮 In-Built Calculator: Perform quick calculations directly inside the Amount input field.
 
-📈 **In-Depth Financial Analysis:**
-The Analysis page provides a deep dive into your spending patterns. Visualize your expense overview with dynamic charts and lists, and filter your view by different time periods (**Daily, Weekly, Monthly, 3 Months, Yearly**).
+⚙️ Auto-Setup: Automatically creates default Accounts (Cash, Bank) and 20+ Categories for new users.
 
-👤 **User Profile Management:**
-Allows users to view their email address and update their display name.
+🌟 Core Features
 
-📱 **Modern & Responsive UI/UX:**
-A clean, intuitive, and mobile-friendly design that works beautifully on desktops, tablets, and smartphones, featuring a "frosted glass" effect on the login page.
+☁️ Cloud Data Sync (Firebase): Real-time data storage. Access your finances from any device.
 
----
+🔐 Secure Authentication: Email/Password login powered by Firebase Auth.
 
-## 📂 Project Structure
+📊 Interactive Dashboard: Visual breakdown of spending with dynamic Pie Charts and summary cards.
 
-| File | Description |
-| :--- | :--- |
-| `login.html` | User Login & Signup page with a frosted glass effect. |
-| `index.html` | The main dashboard to add transactions and view summaries. |
-| `accounts.html` | Manage financial accounts (add, edit, delete, transfer). |
-| `categories.html`| Manage custom income and expense categories. |
-| `history.html` | View, filter, and search all past transactions. |
-| `analysis.html` | Analyze spending with charts and various time-period filters. |
-| `profile.html` | Allows users to view and update their profile name. |
-| `settings.html` | Manage application settings like setting a monthly budget. |
-| `assets/js/` | Contains all the core JavaScript logic for each feature. |
-| `README.md` | This project documentation file. |
+🏦 Multi-Account Management: Manage 'Bank', 'Cash', 'Wallet' separately and transfer funds between them.
 
----
+📜 Advanced History & Search: Filter transactions by type, category, or search by keywords.
 
-## 🚀 How to Use
+📈 Financial Analysis: Deep dive into spending habits with Daily, Weekly, Monthly, and Yearly views.
 
-1.  **Sign Up / Login:**
-    * Open the [Live Demo](https://ammarsk22.github.io/expense-manager/login.html).
-    * Create a new account or sign in with your existing credentials.
+📂 Project Structure
 
-2.  **Initial Setup:**
-    * Navigate to the **Accounts** page to add your financial accounts (e.g., "SBI Bank", "Cash").
-    * Go to the **Categories** page to create your personal income and expense categories (e.g., "Salary", "Food", "Bills").
+File
 
-3.  **Add a Transaction:**
-    * On the **Dashboard**, use the "Add Transaction" form to record your income or expenses.
+Description
 
-4.  **Analyze Your Finances:**
-    * Visit the **Analysis** page to see a visual breakdown of your spending. Use the display options to switch between daily, weekly, monthly, and yearly views.
+login.html
 
-5.  **View History:**
-    * Go to the **History** page to find any past transaction using filters and the search bar.
+User Login & Signup page with a frosted glass effect.
 
----
+index.html
 
-## 🧰 Technologies Used
+The main dashboard with charts, quick fill, and voice input.
 
-* **Frontend:** HTML5, Tailwind CSS, Vanilla JavaScript
-* **Backend (Cloud):** Google Firebase
-    * **Firestore Database:** For storing all user data like transactions, accounts, etc.
-    * **Firebase Authentication:** For secure user login and management.
-* **Charting Library:** Chart.js
+accounts.html
 
----
+Manage financial accounts (add, edit, delete, transfer).
 
-## 👨‍💻 Developed By
+categories.html
 
-* **Ammar Shaikh**
-* 📧 **Email:** `ammarsk200422@gmail.com`
-* 🌐 **GitHub:** [@Ammarsk22](https://github.com/Ammarsk22)
+Manage custom income/expense categories with suggestions.
 
----
+history.html
 
-## 📜 License
+View, filter, search, and export (CSV) past transactions.
 
-This project is open-source and free to use under the **MIT License**.
+analysis.html
+
+Analyze spending with charts and various time-period filters.
+
+goals.html
+
+(New) Set and track savings goals with progress bars.
+
+debt.html
+
+(New) Manage lending and borrowing records.
+
+profile.html
+
+View and update user profile details.
+
+settings.html
+
+Manage app settings (Dark Mode, Monthly Budget).
+
+assets/js/
+
+Contains modular JavaScript logic for each feature.
+
+assets/css/
+
+Contains custom styles and Tailwind configurations.
+
+🚀 How to Use
+
+Sign Up / Login:
+
+Open the app and create a new account.
+
+The app will automatically set up default Accounts and Categories for you.
+
+Add a Transaction:
+
+On the Dashboard, type details manually or use the Mic button to speak.
+
+Check "Save as Template" to reuse this transaction later.
+
+Manage Finances:
+
+Use the Accounts page to transfer money between accounts.
+
+Use the Debts page to record loans given or taken.
+
+Use the Goals page to save for future purchases.
+
+Analyze & Export:
+
+Check the Analysis page for detailed charts.
+
+Go to History to download your data as a CSV file.
+
+🧰 Technologies Used
+
+Frontend: HTML5, Tailwind CSS, Vanilla JavaScript
+
+Backend (Cloud): Google Firebase
+
+Firestore Database: Real-time NoSQL database.
+
+Firebase Authentication: Secure user management.
+
+Charting Library: Chart.js
+
+Icons: FontAwesome
+
+👨‍💻 Developed By
+
+Ammar Shaikh
+
+📧 Email: ammarsk200422@gmail.com
+
+🌐 GitHub: @Ammarsk22
+
+📜 License
+
+This project is open-source and free to use under the MIT License.
