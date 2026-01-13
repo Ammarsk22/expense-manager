@@ -1,25 +1,32 @@
+/**
+ * FinTrack Theme Manager
+ * Handles Light/Dark mode toggling and updates the mobile status bar color.
+ */
+
 // 1. Check and Apply Theme on Load
 const themeCheck = () => {
     const userTheme = localStorage.getItem('theme');
     const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
+    // Check saved preference or system preference
     if (userTheme === 'dark' || (!userTheme && systemTheme)) {
         document.documentElement.classList.add('dark');
-        updateMetaThemeColor('dark'); // Update browser bar color
+        updateMetaThemeColor('dark'); // Update mobile status bar
         return 'dark';
     } else {
         document.documentElement.classList.remove('dark');
-        updateMetaThemeColor('light'); // Update browser bar color
+        updateMetaThemeColor('light'); // Update mobile status bar
         return 'light';
     }
 };
 
-// 2. Update Browser Address Bar Color (Meta Tag)
+// 2. Update Browser Address Bar Color (Critical for Mobile PWA)
 const updateMetaThemeColor = (theme) => {
     const metaThemeColor = document.querySelector("meta[name=theme-color]");
     if (metaThemeColor) {
-        // Dark Mode: Gray-800 (#1F2937), Light Mode: Indigo-600 (#4F46E5)
-        metaThemeColor.setAttribute("content", theme === 'dark' ? "#1F2937" : "#4F46E5");
+        // Light Mode: Indigo-600 (#4F46E5) | Dark Mode: Gray-900 (#111827)
+        // These colors MUST match the header colors in your HTML files.
+        metaThemeColor.setAttribute("content", theme === 'dark' ? "#111827" : "#4F46E5");
     }
 }
 
@@ -37,7 +44,7 @@ const toggleTheme = () => {
     updateToggleState();
 };
 
-// 4. Sync Toggle Button State
+// 4. Sync Toggle Button State (for Settings page)
 const updateToggleState = () => {
     const toggle = document.getElementById('theme-toggle');
     if (toggle) {
@@ -45,11 +52,15 @@ const updateToggleState = () => {
     }
 }
 
-// 5. Initialize
+// 5. Initialize on Page Load
 document.addEventListener('DOMContentLoaded', () => {
+    // Apply theme immediately
     themeCheck();
+    
+    // Sync toggle button if it exists on the page
     updateToggleState();
     
+    // Attach event listener to the toggle button
     const toggleBtn = document.getElementById('theme-toggle');
     if(toggleBtn) {
         toggleBtn.addEventListener('change', toggleTheme);
