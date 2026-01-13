@@ -1,92 +1,96 @@
-# 💰 FinTrack - Personal Expense Manager
+# 💰 Personal Expense Manager
 
-A modern, responsive, and cloud-powered **Progressive Web App (PWA)** for tracking personal finances. Built with **HTML**, **Tailwind CSS**, **Vanilla JavaScript**, and **Firebase**, FinTrack offers a native app-like experience on both mobile and desktop.
+A modern, responsive, and cloud-powered web application for tracking personal finances, built with **HTML**, **Tailwind CSS**, **Vanilla JavaScript**, and **Firebase**.
 
-It helps users manage income, expenses, subscriptions, and debts while providing deep insights through interactive charts and calendar views.
+This system is designed to provide a seamless experience for managing income, expenses, and accounts. It helps users gain insights into their spending habits through a clean and interactive interface.
 
-🔗 **Live Demo:** https://ammarsk22.github.io/expense-manager/login.html
+🔗 **Live Demo:**  
+https://ammarsk22.github.io/expense-manager/login.html
 
 ---
 
 ## ✨ Key Features
 
-### 🚀 Advanced & New Features
+### 🚀 New & Advanced Features
 
-- **📱 PWA Support:** Install FinTrack as a native app on iOS/Android. Works offline!
-- **📅 Smart Calendar View:** Visualize your daily spending and income on an interactive calendar.
-- **🔄 Subscriptions & Recurring:** Set up auto-deducting transactions for Rent, Netflix, EMI, etc.
-- **📄 PDF Reports:** Generate and download professional transaction statements.
-- **📉 Trend Analysis:** View Line Charts to track Income vs. Expense trends over time.
-- **🔔 Smart Budgeting:** Set monthly limits per category (e.g., ₹5000 for Food) and get alerts.
+- **🎙️ Smart Voice Input:** Add transactions effortlessly using voice commands like “200 for Lunch” or “Salary 50000”.
+- **🔄 Recurring Templates (Quick Fill):** Save frequent transactions (Rent, Netflix, etc.) and add them in one click.
+- **🎯 Savings Goals:** Set financial targets (Laptop, Vacation, etc.) and track savings visually.
+- **🤝 Debt Manager:** Maintain borrowed/lent money records so you never miss a pending payment.
+- **🌙 Dark Mode Support:** Fully supports system dark mode or manual toggle.
+- **📥 CSV Export:** Download complete transaction history as a CSV file.
+- **🧮 Built-in Calculator:** Perform quick calculations directly inside the Amount input.
+- **⚙️ Auto Setup:** Automatically creates default Accounts (Cash, Bank) and 20+ Categories for new users.
 
-### 🌟 Core Features
+---
 
-- **🎙️ Smart Voice Input:** Add transactions via voice commands like "200 for Lunch".
+## 🌟 Core Features
+
 - **☁️ Cloud Sync (Firebase):** Real-time data storage accessible from any device.
 - **🔐 Secure Authentication:** Email/Password login via Firebase Auth.
-- **📊 Interactive Dashboard:** Category breakdown with dynamic charts.
-- **🏦 Multi-Account Management:** Handle Cash, Bank, Wallet, and transfer funds.
-- **🎯 Savings Goals:** Set financial targets (Laptop, Vacation) and track progress.
-- **🤝 Debt Manager:** Keep track of money borrowed or lent.
-- **🌙 Dark Mode:** Fully optimized dark theme for night usage.
-- **🧮 Built-in Calculator:** Perform calculations directly inside the amount field.
+- **📊 Interactive Dashboard:** Category breakdown with dynamic pie charts.
+- **🏦 Multi-Account Management:** Handle Cash, Bank, Wallet, and transfer funds easily.
+- **📜 Advanced History & Search:** Filter by type, category, or keyword search.
+- **📈 Financial Analysis:** Daily, weekly, monthly, and yearly insights with charts.
 
 ---
 
 ## 📂 Project Structure
 
-| File / Page          | Description |
-|----------------------|-------------|
-| **login.html** | User login & signup with frosted glass UI. |
-| **index.html** | Dashboard with charts, quick fill, and voice input. |
-| **calendar.html** | **New:** Day-wise visual expense tracking. |
-| **recurring.html** | **New:** Manage automated subscriptions. |
-| **analysis.html** | Trend charts, Expense breakdown, and time filters. |
-| **history.html** | Transaction list with Search, Filter & PDF Export. |
-| **accounts.html** | Add accounts & Transfer funds. |
-| **goals.html** | Savings goals with visual progress bars. |
-| **debt.html** | Manage pending payments (Receivable/Payable). |
-| **settings.html** | Dark Mode toggle, Monthly & Category Budgets. |
-| **service-worker.js**| PWA Caching logic for offline support. |
-| **manifest.json** | App metadata for mobile installation. |
+| File / Page       | Description |
+|------------------|-------------|
+| **login.html**      | User login & signup with frosted glass UI. |
+| **index.html**      | Dashboard with charts, quick fill, and voice input. |
+| **accounts.html**   | Manage accounts (add/edit/delete/transfer). |
+| **categories.html** | Manage custom categories. |
+| **history.html**    | View, filter, search, and export transactions. |
+| **analysis.html**   | Analyze spending with multiple time filters. |
+| **goals.html**      | New — Savings goals with progress tracking. |
+| **debt.html**       | New — Manage borrowed/lent records. |
+| **profile.html**    | Update profile details. |
+| **settings.html**   | Dark Mode + Monthly Budget settings. |
+| **assets/js/**      | Modular JavaScript for each feature. |
+| **assets/css/**     | Custom styles + Tailwind configs. |
 
 ---
 
 ## 🚀 How to Use
 
-### **1. Install the App**
-- Open in Chrome/Safari on Mobile.
-- Tap "Add to Home Screen" or click the "Install" button in the dashboard header.
+### **1. Sign Up / Login**
+- Create an account using Email/Password.
+- Default Accounts and Categories will be auto-created.
 
 ### **2. Add a Transaction**
-- Use the **Dashboard** form to enter details manually.
-- Or tap the **Mic** button and say: *"Spent 500 on Groceries"*.
+- Enter details manually or use the Mic button for voice input.
+- Use “Save as Template” to reuse common transactions.
 
-### **3. Automate Expenses**
-- Go to **Subscriptions**, add your Rent or Netflix bill, and set the frequency.
-- FinTrack will automatically add these transactions on the due date.
+### **3. Manage Your Finances**
+- Transfer money between accounts from the Accounts page.
+- Track borrowed/lent money from the Debts page.
+- Save for future purchases using the Goals page.
 
-### **4. Analyze Finances**
-- Check the **Calendar** to see which days you spent the most.
-- Go to **Analysis** to compare Income vs Expense trends.
-- Download a **PDF Report** from the History page.
+### **4. Analyze & Export**
+- View detailed spending charts in the Analysis page.
+- Export your full transaction history as CSV from the History page.
 
 ---
 
 ## 🧰 Technologies Used
 
 - **Frontend:** HTML5, Tailwind CSS, Vanilla JavaScript  
-- **Backend:** Google Firebase (Firestore & Auth)  
-- **PWA:** Service Workers, Web Manifest  
+- **Backend:** Google Firebase  
+  - Firestore (Real-time NoSQL DB)  
+  - Firebase Authentication  
 - **Charts:** Chart.js  
-- **PDF Generation:** jsPDF  
 - **Icons:** FontAwesome
 
 ---
 
 ## 👨‍💻 Developed By
 
-**Ammar Shaikh** 📧 Email: **ammarsk200422@gmail.com** 🌐 GitHub: **@Ammarsk22**
+**Ammar Shaikh**  
+📧 Email: **ammarsk200422@gmail.com**  
+🌐 GitHub: **@Ammarsk22**
 
 ---
 

@@ -51,7 +51,9 @@
                 <a href="calendar.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-calendar-alt mr-3 w-5"></i>Calendar</a>
                 <a href="analysis.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-chart-line mr-3 w-5"></i>Analysis</a>
                 <a href="accounts.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-university mr-3 w-5"></i>Accounts</a>
+                
                 <a href="recurring.html" class="flex items-center px-4 py-3 text-gray-100 bg-gray-700 rounded-md transition-colors"><i class="fas fa-sync-alt mr-3 w-5"></i>Subscriptions</a>
+                
                 <a href="categories.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-tags mr-3 w-5"></i>Categories</a>
                 <a href="goals.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-bullseye mr-3 w-5"></i>Goals</a>
                 <a href="debt.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-hand-holding-usd mr-3 w-5"></i>Debts</a>
@@ -65,32 +67,32 @@
             </div>
         </aside>
 
-        <main class="flex-1 p-4 pt-20 md:p-10 md:pt-10 overflow-y-auto h-screen">
+        <main class="flex-1 p-4 pt-20 pb-28 md:p-10 md:pt-10 md:overflow-y-auto md:h-screen">
             
             <header class="mb-6">
-                <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Recurring Expenses</h2>
-                <p class="text-gray-500 dark:text-gray-400">Automate your fixed monthly bills like Rent, EMI, or Subscriptions.</p>
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">Recurring Expenses</h2>
+                <p class="text-sm md:text-base text-gray-500 dark:text-gray-400">Automate your fixed monthly bills like Rent, EMI, or Subscriptions.</p>
             </header>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
                 <div class="lg:col-span-1">
-                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                    <div class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-md">
                         <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Add Subscription</h3>
                         <form id="recurring-form" class="space-y-4">
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Name</label>
-                                <input type="text" id="rec-name" required class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g., Netflix">
+                                <input type="text" id="rec-name" required class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="e.g., Netflix">
                             </div>
                             
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Amount (₹)</label>
-                                <input type="number" id="rec-amount" required class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="0.00">
+                                <input type="number" id="rec-amount" required class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="0.00">
                             </div>
 
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Category</label>
-                                <select id="rec-category" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <select id="rec-category" class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
                                     <option value="Bills">Bills</option>
                                     <option value="Entertainment">Entertainment</option>
                                     <option value="Rent">Rent</option>
@@ -103,7 +105,7 @@
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Frequency</label>
-                                    <select id="rec-frequency" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <select id="rec-frequency" class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
                                         <option value="monthly">Monthly</option>
                                         <option value="weekly">Weekly</option>
                                         <option value="yearly">Yearly</option>
@@ -111,17 +113,17 @@
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Next Due Date</label>
-                                    <input type="date" id="rec-date" required class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <input type="date" id="rec-date" required class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
                                 </div>
                             </div>
 
-                            <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 transition shadow-md">Add Subscription</button>
+                            <button type="submit" class="w-full bg-indigo-600 text-white py-2.5 rounded-md hover:bg-indigo-700 transition shadow-md font-medium">Add Subscription</button>
                         </form>
                     </div>
                 </div>
 
                 <div class="lg:col-span-2">
-                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md h-full">
+                    <div class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-md h-full">
                         <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Active Subscriptions</h3>
                         <div id="recurring-list" class="space-y-3">
                             <div class="skeleton h-16 w-full rounded"></div>
