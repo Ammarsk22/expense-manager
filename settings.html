@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings | Personal Expense Manager</title>
+    <title>Settings | FinTrack</title>
     
-    <!-- Tailwind CSS with Dark Mode Configuration -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4F46E5">
+    <link rel="apple-touch-icon" href="assets/img/icon-192.png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -23,43 +26,46 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+    </style>
 </head>
 <body class="font-sans bg-[#EAE5E1] dark:bg-gray-900 transition-colors duration-200">
 
     <div class="relative min-h-screen md:flex">
-        <!-- Mobile Header -->
-        <div class="md:hidden flex justify-between items-center bg-gray-800 text-white p-4">
-            <h1 class="text-xl font-bold"><i class="fas fa-wallet mr-2"></i>Expense Manager</h1>
-            <button id="menu-button" class="focus:outline-none">
+        
+        <div class="md:hidden fixed w-full top-0 z-30 flex justify-between items-center bg-gray-800 text-white p-4 shadow-lg">
+            <h1 class="text-lg font-bold"><i class="fas fa-wallet mr-2"></i>FinTrack</h1>
+            <button id="menu-button" class="focus:outline-none p-2 rounded hover:bg-gray-700 transition-colors">
                 <i class="fas fa-bars text-xl"></i>
             </button>
         </div>
 
-        <!-- Sidebar -->
-        <aside id="sidebar" class="w-64 bg-gray-800 text-white flex-col fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50">
+        <aside id="sidebar" class="w-64 bg-gray-800 text-white flex-col fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-2xl">
             <div class="p-4 border-b border-gray-700 hidden md:block">
-                <h1 class="text-xl font-bold"><i class="fas fa-wallet mr-2"></i>Personal Expense Manager</h1>
+                <h1 class="text-xl font-bold"><i class="fas fa-wallet mr-2"></i>FinTrack</h1>
             </div>
-            <nav class="flex-1 p-4 space-y-2">
-                <a href="index.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-chart-pie mr-3"></i>Dashboard</a>
-                <a href="analysis.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-chart-line mr-3"></i>Analysis</a>
-                <a href="accounts.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-university mr-3"></i>Accounts</a>
-                <a href="goals.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-bullseye mr-3"></i>Goals</a>
-                <a href="debt.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-hand-holding-usd mr-3"></i>Debts</a>
-                <a href="categories.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-tags mr-3"></i>Categories</a>
-                <a href="history.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-history mr-3"></i>History</a>
-                <a href="profile.html" class="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-md"><i class="fas fa-user-circle mr-3"></i>Profile</a>
-                
-                <!-- Settings Link (Active) -->
-                <a href="settings.html" class="flex items-center px-4 py-2 text-gray-100 bg-gray-700 rounded-md"><i class="fas fa-cog mr-3"></i>Settings</a>
+            
+            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+                <a href="index.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-chart-pie mr-3 w-5"></i>Dashboard</a>
+                <a href="calendar.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-calendar-alt mr-3 w-5"></i>Calendar</a>
+                <a href="analysis.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-chart-line mr-3 w-5"></i>Analysis</a>
+                <a href="accounts.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-university mr-3 w-5"></i>Accounts</a>
+                <a href="recurring.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-sync-alt mr-3 w-5"></i>Subscriptions</a>
+                <a href="categories.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-tags mr-3 w-5"></i>Categories</a>
+                <a href="goals.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-bullseye mr-3 w-5"></i>Goals</a>
+                <a href="debt.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-hand-holding-usd mr-3 w-5"></i>Debts</a>
+                <a href="history.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-history mr-3 w-5"></i>History</a>
+                <a href="profile.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-user-circle mr-3 w-5"></i>Profile</a>
+                <a href="settings.html" class="flex items-center px-4 py-3 text-gray-100 bg-gray-700 rounded-md transition-colors"><i class="fas fa-cog mr-3 w-5"></i>Settings</a>
             </nav>
+
             <div class="p-4 border-t border-gray-700">
-                <button id="logout-button" class="w-full flex items-center justify-center px-4 py-2 text-gray-300 hover:bg-red-600 rounded-md"><i class="fas fa-sign-out-alt mr-3"></i>Logout</button>
+                <button id="logout-button" class="w-full flex items-center justify-center px-4 py-2 text-gray-300 hover:bg-red-600 rounded-md transition-colors"><i class="fas fa-sign-out-alt mr-3"></i>Logout</button>
             </div>
         </aside>
 
-        <!-- Main Content -->
-        <main class="flex-1 p-6 md:p-10 overflow-y-auto">
+        <main class="flex-1 p-4 pt-20 md:p-10 md:pt-10 overflow-y-auto h-screen">
             <header class="mb-8">
                 <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Settings</h2>
                 <p class="text-gray-500 dark:text-gray-400">Manage your application settings and budget.</p>
@@ -67,7 +73,6 @@
 
             <section class="max-w-2xl space-y-6">
                 
-                <!-- Appearance Settings (Dark Mode Toggle) -->
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md transition-colors duration-200">
                     <h3 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Appearance</h3>
                     <div class="flex items-center justify-between">
@@ -75,7 +80,6 @@
                             <p class="font-medium text-gray-700 dark:text-gray-200">Dark Mode</p>
                             <p class="text-sm text-gray-500 dark:text-gray-400">Switch between light and dark themes</p>
                         </div>
-                        <!-- Toggle Switch -->
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="theme-toggle" class="sr-only peer">
                             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
@@ -83,7 +87,6 @@
                     </div>
                 </div>
 
-                <!-- Budget Settings Card -->
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md transition-colors duration-200">
                     <h3 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Monthly Budget</h3>
                     <p class="text-gray-600 dark:text-gray-300 mb-6">Set a monthly spending limit to get alerts on your dashboard.</p>
@@ -102,9 +105,26 @@
                     </form>
                 </div>
 
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md transition-colors duration-200">
+                    <h3 class="text-2xl font-bold mb-4 text-gray-800 dark:text-white">Category Budgets</h3>
+                    <p class="text-gray-600 dark:text-gray-300 mb-6">Set specific spending limits for your expense categories.</p>
+                    
+                    <div id="category-budget-list" class="space-y-4 mb-6 max-h-96 overflow-y-auto custom-scrollbar pr-2">
+                        <div class="flex justify-center py-4">
+                            <div class="skeleton h-10 w-full rounded"></div>
+                        </div>
+                    </div>
+
+                    <div id="cat-budget-status" class="text-sm h-5 mb-2"></div>
+
+                    <button id="save-category-budgets-btn" class="w-full sm:w-auto bg-indigo-600 text-white py-2 px-6 rounded-md hover:bg-indigo-700 transition-colors shadow-sm">
+                        Save Category Budgets
+                    </button>
+                </div>
+
             </section>
 
-            <footer class="text-center mt-12">
+            <footer class="text-center mt-12 mb-24 md:mb-6">
                 <p class="text-gray-500 dark:text-gray-400 text-sm">
                     Developed by <span class="font-semibold">Ammar Shaikh</span> | 
                     <a href="mailto:ammarsk200422@gmail.com" class="text-indigo-600 dark:text-indigo-400 hover:underline">ammarsk200422@gmail.com</a>
@@ -113,7 +133,30 @@
         </main>
     </div>
 
-    <!-- Scripts -->
+    <div class="md:hidden fixed bottom-0 w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex justify-around items-center p-3 z-50 shadow-lg pb-safe">
+        <a href="index.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+            <i class="fas fa-home text-lg"></i>
+            <span class="text-[10px] font-medium mt-1">Home</span>
+        </a>
+        <a href="analysis.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+            <i class="fas fa-chart-pie text-lg"></i>
+            <span class="text-[10px] font-medium mt-1">Analysis</span>
+        </a>
+        <div class="relative -top-6">
+            <a href="index.html#transaction-form" class="flex items-center justify-center w-14 h-14 bg-indigo-600 rounded-full text-white shadow-lg border-4 border-[#EAE5E1] dark:border-gray-900">
+                <i class="fas fa-plus text-xl"></i>
+            </a>
+        </div>
+        <a href="history.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+            <i class="fas fa-history text-lg"></i>
+            <span class="text-[10px] font-medium mt-1">History</span>
+        </a>
+        <a href="settings.html" class="flex flex-col items-center text-indigo-600 dark:text-indigo-400">
+            <i class="fas fa-cog text-lg"></i>
+            <span class="text-[10px] font-medium mt-1">Settings</span>
+        </a>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
