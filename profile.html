@@ -8,7 +8,7 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4F46E5">
     <link rel="apple-touch-icon" href="assets/img/icon-192.png">
-
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -47,68 +47,123 @@
             </div>
             
             <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-                <a href="index.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-chart-pie mr-3 w-5"></i>Dashboard</a>
-                <a href="calendar.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-calendar-alt mr-3 w-5"></i>Calendar</a>
-                <a href="analysis.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-chart-line mr-3 w-5"></i>Analysis</a>
-                <a href="accounts.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-university mr-3 w-5"></i>Accounts</a>
-                <a href="recurring.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-sync-alt mr-3 w-5"></i>Subscriptions</a>
-                <a href="categories.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-tags mr-3 w-5"></i>Categories</a>
-                <a href="goals.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-bullseye mr-3 w-5"></i>Goals</a>
-                <a href="debt.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-hand-holding-usd mr-3 w-5"></i>Debts</a>
-                <a href="history.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-history mr-3 w-5"></i>History</a>
-                <a href="profile.html" class="flex items-center px-4 py-3 text-gray-100 bg-gray-700 rounded-md transition-colors"><i class="fas fa-user-circle mr-3 w-5"></i>Profile</a>
-                <a href="settings.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-cog mr-3 w-5"></i>Settings</a>
+                <a href="index.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-chart-pie mr-3 w-5"></i><span data-i18n="nav_dashboard">Dashboard</span>
+                </a>
+                <a href="calendar.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-calendar-alt mr-3 w-5"></i><span data-i18n="nav_calendar">Calendar</span>
+                </a>
+                <a href="analysis.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-chart-line mr-3 w-5"></i><span data-i18n="nav_analysis">Analysis</span>
+                </a>
+                <a href="accounts.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-university mr-3 w-5"></i><span data-i18n="nav_accounts">Accounts</span>
+                </a>
+                <a href="recurring.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-sync-alt mr-3 w-5"></i><span data-i18n="nav_recurring">Subscriptions</span>
+                </a>
+                <a href="categories.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-tags mr-3 w-5"></i><span data-i18n="nav_categories">Categories</span>
+                </a>
+                <a href="goals.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-bullseye mr-3 w-5"></i><span data-i18n="nav_goals">Goals</span>
+                </a>
+                <a href="debt.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-hand-holding-usd mr-3 w-5"></i><span data-i18n="nav_debts">Debts</span>
+                </a>
+                <a href="split-bill.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-users mr-3 w-5"></i><span data-i18n="nav_split">Split Bill</span>
+                </a>
+                <a href="history.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-history mr-3 w-5"></i><span data-i18n="nav_history">History</span>
+                </a>
+                <a href="profile.html" class="flex items-center px-4 py-3 text-gray-100 bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-user-circle mr-3 w-5"></i><span data-i18n="nav_profile">Profile</span>
+                </a>
+                <a href="settings.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-cog mr-3 w-5"></i><span data-i18n="nav_settings">Settings</span>
+                </a>
             </nav>
 
             <div class="p-4 border-t border-gray-700">
-                <button id="logout-button" class="w-full flex items-center justify-center px-4 py-2 text-gray-300 hover:bg-red-600 rounded-md transition-colors"><i class="fas fa-sign-out-alt mr-3"></i>Logout</button>
+                <button id="logout-button" class="w-full flex items-center justify-center px-4 py-2 text-gray-300 hover:bg-red-600 rounded-md transition-colors">
+                    <i class="fas fa-sign-out-alt mr-3"></i><span data-i18n="nav_logout">Logout</span>
+                </button>
             </div>
         </aside>
 
         <main class="flex-1 p-4 pt-20 md:p-10 md:pt-10 overflow-y-auto h-screen">
             <header class="mb-8">
-                <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Your Profile</h2>
-                <p class="text-gray-500 dark:text-gray-400">Manage your personal information.</p>
+                <h2 class="text-3xl font-bold text-gray-800 dark:text-white" data-i18n="profile_title">User Profile</h2>
+                <p class="text-gray-500 dark:text-gray-400" data-i18n="profile_desc">Manage your personal information.</p>
             </header>
 
-            <section class="max-w-2xl">
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md transition-colors duration-200">
-                    <form id="profile-form" class="space-y-4">
-                        <div>
-                            <label for="profile-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
-                            <input type="text" id="profile-name" class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-indigo-500" placeholder="Your Name">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <div class="lg:col-span-1">
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md text-center">
+                        <div class="relative w-32 h-32 mx-auto mb-4">
+                            <div class="w-32 h-32 rounded-full bg-indigo-100 dark:bg-gray-700 flex items-center justify-center text-4xl text-indigo-600 dark:text-indigo-400 font-bold overflow-hidden" id="profile-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email Address</label>
-                            <p id="profile-email" class="mt-1 text-gray-500 bg-gray-100 p-2 rounded-md dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600">Loading...</p>
-                        </div>
-                        <div id="profile-status" class="text-sm h-5"></div>
-                        <div>
-                            <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition-colors shadow-sm">
-                                Save Changes
-                            </button>
-                        </div>
-                    </form>
+                        <h3 class="text-xl font-bold text-gray-800 dark:text-white" id="display-name">Loading...</h3>
+                        <p class="text-gray-500 dark:text-gray-400 text-sm mb-4" id="display-email">user@example.com</p>
+                        
+                        <button id="logout-btn-2" class="w-full bg-red-100 text-red-600 py-2 rounded-md hover:bg-red-200 transition-colors font-medium border border-red-200 dark:bg-red-900/20 dark:border-red-900/50">
+                            <i class="fas fa-sign-out-alt mr-2"></i><span data-i18n="btn_logout">Logout</span>
+                        </button>
+                    </div>
                 </div>
-            </section>
 
-            <footer class="text-center mt-12 mb-24 md:mb-6">
-                <p class="text-gray-500 dark:text-gray-400 text-sm">
-                    Developed by <span class="font-semibold">Ammar Shaikh</span> | 
-                    <a href="mailto:ammarsk200422@gmail.com" class="text-indigo-600 dark:text-indigo-400 hover:underline">ammarsk200422@gmail.com</a>
-                </p>
-            </footer>
+                <div class="lg:col-span-2">
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+                        <form id="profile-form" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" data-i18n="lbl_full_name">Full Name</label>
+                                    <input type="text" id="profile-name" class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Your Name">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" data-i18n="lbl_email">Email Address</label>
+                                    <input type="email" id="profile-email" disabled class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-md bg-gray-100 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" data-i18n="lbl_phone">Phone Number</label>
+                                    <input type="tel" id="profile-phone" class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="+91 98765 43210">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1" data-i18n="lbl_currency">Currency</label>
+                                    <select id="profile-currency" class="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                        <option value="INR">INR (₹)</option>
+                                        <option value="USD">USD ($)</option>
+                                        <option value="EUR">EUR (€)</option>
+                                        <option value="GBP">GBP (£)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="border-t border-gray-200 dark:border-gray-700 pt-6 flex justify-end">
+                                <button type="submit" id="save-profile-btn" class="bg-indigo-600 text-white px-6 py-2.5 rounded-md hover:bg-indigo-700 transition-colors shadow-md flex items-center">
+                                    <i class="fas fa-save mr-2"></i><span data-i18n="btn_save_changes">Save Changes</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
         </main>
     </div>
 
     <div class="md:hidden fixed bottom-0 w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex justify-around items-center p-3 z-50 shadow-lg pb-safe">
         <a href="index.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
             <i class="fas fa-home text-lg"></i>
-            <span class="text-[10px] font-medium mt-1">Home</span>
+            <span class="text-[10px] font-medium mt-1" data-i18n="nav_dashboard">Home</span>
         </a>
         <a href="analysis.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
             <i class="fas fa-chart-pie text-lg"></i>
-            <span class="text-[10px] font-medium mt-1">Analysis</span>
+            <span class="text-[10px] font-medium mt-1" data-i18n="nav_analysis">Analysis</span>
         </a>
         <div class="relative -top-6">
             <a href="index.html#transaction-form" class="flex items-center justify-center w-14 h-14 bg-indigo-600 rounded-full text-white shadow-lg border-4 border-[#EAE5E1] dark:border-gray-900">
@@ -117,11 +172,11 @@
         </div>
         <a href="history.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
             <i class="fas fa-history text-lg"></i>
-            <span class="text-[10px] font-medium mt-1">History</span>
+            <span class="text-[10px] font-medium mt-1" data-i18n="nav_history">History</span>
         </a>
         <a href="profile.html" class="flex flex-col items-center text-indigo-600 dark:text-indigo-400">
             <i class="fas fa-user text-lg"></i>
-            <span class="text-[10px] font-medium mt-1">Profile</span>
+            <span class="text-[10px] font-medium mt-1" data-i18n="nav_profile">Profile</span>
         </a>
     </div>
 
@@ -134,5 +189,9 @@
     <script src="assets/js/main.js"></script>
     <script src="assets/js/profile.js"></script>
     <script src="assets/js/theme.js"></script>
+    
+    <script src="assets/js/security.js"></script>
+    <script src="assets/js/notifications.js"></script>
+    <script src="assets/js/lang.js"></script>
 </body>
 </html>

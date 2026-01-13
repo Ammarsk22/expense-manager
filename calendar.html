@@ -28,11 +28,12 @@
     <link rel="stylesheet" href="assets/css/style.css">
     <style>
         .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
-        /* Adjusted Grid for better fit on small screens */
+        
+        /* Responsive Calendar Grid */
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 2px; /* Decreased gap */
+            gap: 2px; /* Tighter gap for mobile */
         }
         @media (min-width: 768px) {
             .calendar-grid { gap: 0.5rem; }
@@ -56,21 +57,48 @@
             </div>
             
             <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-                <a href="index.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-chart-pie mr-3 w-5"></i>Dashboard</a>
-                <a href="calendar.html" class="flex items-center px-4 py-3 text-gray-100 bg-gray-700 rounded-md transition-colors"><i class="fas fa-calendar-alt mr-3 w-5"></i>Calendar</a>
-                <a href="analysis.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-chart-line mr-3 w-5"></i>Analysis</a>
-                <a href="accounts.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-university mr-3 w-5"></i>Accounts</a>
-                <a href="recurring.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-sync-alt mr-3 w-5"></i>Subscriptions</a>
-                <a href="categories.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-tags mr-3 w-5"></i>Categories</a>
-                <a href="goals.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-bullseye mr-3 w-5"></i>Goals</a>
-                <a href="debt.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-hand-holding-usd mr-3 w-5"></i>Debts</a>
-                <a href="history.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-history mr-3 w-5"></i>History</a>
-                <a href="profile.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-user-circle mr-3 w-5"></i>Profile</a>
-                <a href="settings.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-cog mr-3 w-5"></i>Settings</a>
+                <a href="index.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-chart-pie mr-3 w-5"></i><span data-i18n="nav_dashboard">Dashboard</span>
+                </a>
+                <a href="calendar.html" class="flex items-center px-4 py-3 text-gray-100 bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-calendar-alt mr-3 w-5"></i><span data-i18n="nav_calendar">Calendar</span>
+                </a>
+                <a href="analysis.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-chart-line mr-3 w-5"></i><span data-i18n="nav_analysis">Analysis</span>
+                </a>
+                <a href="accounts.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-university mr-3 w-5"></i><span data-i18n="nav_accounts">Accounts</span>
+                </a>
+                <a href="recurring.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-sync-alt mr-3 w-5"></i><span data-i18n="nav_recurring">Subscriptions</span>
+                </a>
+                <a href="categories.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-tags mr-3 w-5"></i><span data-i18n="nav_categories">Categories</span>
+                </a>
+                <a href="goals.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-bullseye mr-3 w-5"></i><span data-i18n="nav_goals">Goals</span>
+                </a>
+                <a href="debt.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-hand-holding-usd mr-3 w-5"></i><span data-i18n="nav_debts">Debts</span>
+                </a>
+                <a href="split-bill.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-users mr-3 w-5"></i><span data-i18n="nav_split">Split Bill</span>
+                </a>
+                <a href="history.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-history mr-3 w-5"></i><span data-i18n="nav_history">History</span>
+                </a>
+                <a href="profile.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-user-circle mr-3 w-5"></i><span data-i18n="nav_profile">Profile</span>
+                </a>
+                <a href="settings.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-cog mr-3 w-5"></i><span data-i18n="nav_settings">Settings</span>
+                </a>
             </nav>
 
             <div class="p-4 border-t border-gray-700">
-                <button id="logout-button" class="w-full flex items-center justify-center px-4 py-2 text-gray-300 hover:bg-red-600 rounded-md transition-colors"><i class="fas fa-sign-out-alt mr-3"></i>Logout</button>
+                <button id="logout-button" class="w-full flex items-center justify-center px-4 py-2 text-gray-300 hover:bg-red-600 rounded-md transition-colors">
+                    <i class="fas fa-sign-out-alt mr-3"></i><span data-i18n="nav_logout">Logout</span>
+                </button>
             </div>
         </aside>
 
@@ -78,7 +106,7 @@
             
             <header class="flex justify-between items-center mb-6">
                 <div>
-                    <h2 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">Calendar</h2>
+                    <h2 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white" data-i18n="nav_calendar">Calendar</h2>
                     <p class="text-xs md:text-base text-gray-500 dark:text-gray-400">View your spending patterns day by day.</p>
                 </div>
             </header>
@@ -90,7 +118,7 @@
                         <button id="prev-month" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
                             <i class="fas fa-chevron-left text-gray-600 dark:text-gray-300"></i>
                         </button>
-                        <h3 id="current-month-year" class="text-lg md:text-xl font-bold text-gray-800 dark:text-white"></h3>
+                        <h3 id="current-month-year" class="text-lg md:text-xl font-bold text-gray-800 dark:text-white">Loading...</h3>
                         <button id="next-month" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
                             <i class="fas fa-chevron-right text-gray-600 dark:text-gray-300"></i>
                         </button>
@@ -128,11 +156,11 @@
     <div class="md:hidden fixed bottom-0 w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex justify-around items-center p-3 z-50 shadow-lg pb-safe">
         <a href="index.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
             <i class="fas fa-home text-lg"></i>
-            <span class="text-[10px] font-medium mt-1">Home</span>
+            <span class="text-[10px] font-medium mt-1" data-i18n="nav_dashboard">Home</span>
         </a>
         <a href="calendar.html" class="flex flex-col items-center text-indigo-600 dark:text-indigo-400">
             <i class="fas fa-calendar-alt text-lg"></i>
-            <span class="text-[10px] font-medium mt-1">Calendar</span>
+            <span class="text-[10px] font-medium mt-1" data-i18n="nav_calendar">Calendar</span>
         </a>
         <div class="relative -top-6">
             <a href="index.html#transaction-form" class="flex items-center justify-center w-14 h-14 bg-indigo-600 rounded-full text-white shadow-lg border-4 border-[#EAE5E1] dark:border-gray-900">
@@ -141,11 +169,11 @@
         </div>
         <a href="history.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
             <i class="fas fa-history text-lg"></i>
-            <span class="text-[10px] font-medium mt-1">History</span>
+            <span class="text-[10px] font-medium mt-1" data-i18n="nav_history">History</span>
         </a>
         <a href="settings.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
             <i class="fas fa-cog text-lg"></i>
-            <span class="text-[10px] font-medium mt-1">Settings</span>
+            <span class="text-[10px] font-medium mt-1" data-i18n="nav_settings">Settings</span>
         </a>
     </div>
 
@@ -158,5 +186,9 @@
     <script src="assets/js/main.js"></script>
     <script src="assets/js/theme.js"></script>
     <script src="assets/js/calendar.js"></script>
+    
+    <script src="assets/js/security.js"></script>
+    <script src="assets/js/notifications.js"></script>
+    <script src="assets/js/lang.js"></script>
 </body>
 </html>

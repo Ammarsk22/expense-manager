@@ -47,74 +47,101 @@
             </div>
             
             <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-                <a href="index.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-chart-pie mr-3 w-5"></i>Dashboard</a>
-                <a href="calendar.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-calendar-alt mr-3 w-5"></i>Calendar</a>
-                <a href="analysis.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-chart-line mr-3 w-5"></i>Analysis</a>
-                <a href="accounts.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-university mr-3 w-5"></i>Accounts</a>
-                <a href="recurring.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-sync-alt mr-3 w-5"></i>Subscriptions</a>
-                <a href="categories.html" class="flex items-center px-4 py-3 text-gray-100 bg-gray-700 rounded-md transition-colors"><i class="fas fa-tags mr-3 w-5"></i>Categories</a>
-                <a href="goals.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-bullseye mr-3 w-5"></i>Goals</a>
-                <a href="debt.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-hand-holding-usd mr-3 w-5"></i>Debts</a>
-                <a href="history.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-history mr-3 w-5"></i>History</a>
-                <a href="profile.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-user-circle mr-3 w-5"></i>Profile</a>
-                <a href="settings.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-cog mr-3 w-5"></i>Settings</a>
+                <a href="index.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-chart-pie mr-3 w-5"></i><span data-i18n="nav_dashboard">Dashboard</span>
+                </a>
+                <a href="calendar.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-calendar-alt mr-3 w-5"></i><span data-i18n="nav_calendar">Calendar</span>
+                </a>
+                <a href="analysis.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-chart-line mr-3 w-5"></i><span data-i18n="nav_analysis">Analysis</span>
+                </a>
+                <a href="accounts.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-university mr-3 w-5"></i><span data-i18n="nav_accounts">Accounts</span>
+                </a>
+                <a href="recurring.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-sync-alt mr-3 w-5"></i><span data-i18n="nav_recurring">Subscriptions</span>
+                </a>
+                <a href="categories.html" class="flex items-center px-4 py-3 text-gray-100 bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-tags mr-3 w-5"></i><span data-i18n="nav_categories">Categories</span>
+                </a>
+                <a href="goals.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-bullseye mr-3 w-5"></i><span data-i18n="nav_goals">Goals</span>
+                </a>
+                <a href="debt.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-hand-holding-usd mr-3 w-5"></i><span data-i18n="nav_debts">Debts</span>
+                </a>
+                <a href="split-bill.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-users mr-3 w-5"></i><span data-i18n="nav_split">Split Bill</span>
+                </a>
+                <a href="history.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-history mr-3 w-5"></i><span data-i18n="nav_history">History</span>
+                </a>
+                <a href="profile.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-user-circle mr-3 w-5"></i><span data-i18n="nav_profile">Profile</span>
+                </a>
+                <a href="settings.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fas fa-cog mr-3 w-5"></i><span data-i18n="nav_settings">Settings</span>
+                </a>
             </nav>
 
             <div class="p-4 border-t border-gray-700">
-                <button id="logout-button" class="w-full flex items-center justify-center px-4 py-2 text-gray-300 hover:bg-red-600 rounded-md transition-colors"><i class="fas fa-sign-out-alt mr-3"></i>Logout</button>
+                <button id="logout-button" class="w-full flex items-center justify-center px-4 py-2 text-gray-300 hover:bg-red-600 rounded-md transition-colors">
+                    <i class="fas fa-sign-out-alt mr-3"></i><span data-i18n="nav_logout">Logout</span>
+                </button>
             </div>
         </aside>
 
-        <main class="flex-1 p-4 pt-20 md:p-10 md:pt-10 overflow-y-auto h-screen">
+        <main class="flex-1 p-4 pt-20 pb-28 md:p-10 md:pt-10 md:overflow-y-auto md:h-screen">
             <header class="mb-6">
-                <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Categories</h2>
-                <p class="text-gray-500 dark:text-gray-400">Customize your income and expense categories.</p>
+                <h2 class="text-3xl font-bold text-gray-800 dark:text-white" data-i18n="cat_title">Categories</h2>
+                <p class="text-gray-500 dark:text-gray-400" data-i18n="cat_desc">Customize your income and expense categories.</p>
             </header>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
                 <div class="lg:col-span-1">
                     <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md sticky top-6">
-                        <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">Add Category</h3>
+                        <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white" data-i18n="add_category">Add Category</h3>
                         <form id="add-category-form" class="space-y-4">
                             <div>
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Category Name</label>
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1" data-i18n="lbl_cat_name">Category Name</label>
                                 <input type="text" id="cat-name" required class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g., Freelance">
                             </div>
                             
                             <div>
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1">Type</label>
+                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1" data-i18n="lbl_type">Type</label>
                                 <div class="grid grid-cols-2 gap-3">
                                     <label class="cursor-pointer">
                                         <input type="radio" name="cat-type" value="expense" class="peer sr-only" checked>
-                                        <div class="text-center py-2 border border-gray-300 dark:border-gray-600 rounded peer-checked:bg-red-100 peer-checked:text-red-700 peer-checked:border-red-500 dark:peer-checked:bg-red-900/30 dark:peer-checked:text-red-400 text-gray-600 dark:text-gray-400 transition-all">
+                                        <div class="text-center py-2 border border-gray-300 dark:border-gray-600 rounded peer-checked:bg-red-100 peer-checked:text-red-700 peer-checked:border-red-500 dark:peer-checked:bg-red-900/30 dark:peer-checked:text-red-400 text-gray-600 dark:text-gray-400 transition-all" data-i18n="filter_expense">
                                             Expense
                                         </div>
                                     </label>
                                     <label class="cursor-pointer">
                                         <input type="radio" name="cat-type" value="income" class="peer sr-only">
-                                        <div class="text-center py-2 border border-gray-300 dark:border-gray-600 rounded peer-checked:bg-green-100 peer-checked:text-green-700 peer-checked:border-green-500 dark:peer-checked:bg-green-900/30 dark:peer-checked:text-green-400 text-gray-600 dark:text-gray-400 transition-all">
+                                        <div class="text-center py-2 border border-gray-300 dark:border-gray-600 rounded peer-checked:bg-green-100 peer-checked:text-green-700 peer-checked:border-green-500 dark:peer-checked:bg-green-900/30 dark:peer-checked:text-green-400 text-gray-600 dark:text-gray-400 transition-all" data-i18n="filter_income">
                                             Income
                                         </div>
                                     </label>
                                 </div>
                             </div>
 
-                            <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 transition shadow-md">Add Category</button>
+                            <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 transition shadow-md" data-i18n="btn_add_cat">Add Category</button>
                         </form>
                     </div>
                 </div>
 
                 <div class="lg:col-span-2 space-y-6">
                     <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-                        <h3 class="text-lg font-bold mb-4 text-red-600 dark:text-red-400 border-b dark:border-gray-700 pb-2">Expense Categories</h3>
+                        <h3 class="text-lg font-bold mb-4 text-red-600 dark:text-red-400 border-b dark:border-gray-700 pb-2" data-i18n="title_exp_cat">Expense Categories</h3>
                         <div id="expense-cat-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <p class="text-gray-500 text-sm">Loading...</p>
                         </div>
                     </div>
 
                     <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-                        <h3 class="text-lg font-bold mb-4 text-green-600 dark:text-green-400 border-b dark:border-gray-700 pb-2">Income Categories</h3>
+                        <h3 class="text-lg font-bold mb-4 text-green-600 dark:text-green-400 border-b dark:border-gray-700 pb-2" data-i18n="title_inc_cat">Income Categories</h3>
                         <div id="income-cat-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                              <p class="text-gray-500 text-sm">Loading...</p>
                         </div>
@@ -129,11 +156,11 @@
     <div class="md:hidden fixed bottom-0 w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex justify-around items-center p-3 z-50 shadow-lg pb-safe">
         <a href="index.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
             <i class="fas fa-home text-lg"></i>
-            <span class="text-[10px] font-medium mt-1">Home</span>
+            <span class="text-[10px] font-medium mt-1" data-i18n="nav_dashboard">Home</span>
         </a>
         <a href="analysis.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
             <i class="fas fa-chart-pie text-lg"></i>
-            <span class="text-[10px] font-medium mt-1">Analysis</span>
+            <span class="text-[10px] font-medium mt-1" data-i18n="nav_analysis">Analysis</span>
         </a>
         <div class="relative -top-6">
             <a href="index.html#transaction-form" class="flex items-center justify-center w-14 h-14 bg-indigo-600 rounded-full text-white shadow-lg border-4 border-[#EAE5E1] dark:border-gray-900">
@@ -142,11 +169,11 @@
         </div>
         <a href="categories.html" class="flex flex-col items-center text-indigo-600 dark:text-indigo-400">
             <i class="fas fa-tags text-lg"></i>
-            <span class="text-[10px] font-medium mt-1">Categories</span>
+            <span class="text-[10px] font-medium mt-1" data-i18n="nav_categories">Categories</span>
         </a>
         <a href="settings.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
             <i class="fas fa-cog text-lg"></i>
-            <span class="text-[10px] font-medium mt-1">Settings</span>
+            <span class="text-[10px] font-medium mt-1" data-i18n="nav_settings">Settings</span>
         </a>
     </div>
 
@@ -157,7 +184,11 @@
     <script src="assets/js/firebase.js"></script>
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/main.js"></script>
-    <script src="assets/js/theme.js"></script>
     <script src="assets/js/categories.js"></script>
+    <script src="assets/js/theme.js"></script>
+    
+    <script src="assets/js/security.js"></script>
+    <script src="assets/js/notifications.js"></script>
+    <script src="assets/js/lang.js"></script>
 </body>
 </html>
