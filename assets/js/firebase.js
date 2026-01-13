@@ -13,9 +13,13 @@ const firebaseConfig = {
 // Initialize Firebase using the "compat" version of the SDK
 const app = firebase.initializeApp(firebaseConfig);
 
-// Make Firebase services available for other scripts to use
+// Initialize Firebase services
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-console.log("Firebase initialized successfully.");
+// --- CRITICAL FIX ---
+// Make services globally available for other scripts (forecast.js, split.js, etc.)
+window.auth = auth;
+window.db = db;
 
+console.log("Firebase initialized successfully.");
