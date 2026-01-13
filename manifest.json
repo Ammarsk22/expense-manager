@@ -1,7 +1,8 @@
 {
   "name": "FinTrack - Expense Manager",
   "short_name": "FinTrack",
-  "start_url": "index.html",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#4F46E5",

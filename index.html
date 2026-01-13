@@ -2,11 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | FinTrack</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FinTrack</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4F46E5"> 
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FinTrack">
     <link rel="apple-touch-icon" href="assets/img/icon-192.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -70,8 +74,8 @@
                 <i class="fas fa-wallet mr-2 text-white/90"></i>FinTrack
             </h1>
             <div class="flex items-center gap-3">
-                <button id="install-btn" class="hidden bg-white text-indigo-600 px-3 py-1 rounded text-xs font-bold uppercase tracking-wide hover:bg-gray-100 transition">
-                    Install
+                <button id="install-btn" class="hidden bg-white text-indigo-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide hover:bg-gray-100 transition shadow-sm">
+                    <i class="fas fa-download mr-1"></i> Install
                 </button>
                 <button id="menu-button" class="focus:outline-none p-2 rounded hover:bg-indigo-700 dark:hover:bg-gray-800 transition-colors">
                     <i class="fas fa-bars text-xl"></i>
@@ -361,6 +365,9 @@
         });
 
         // PWA Installation Logic
+        let deferredPrompt;
+        const installBtn = document.getElementById('install-btn');
+
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('service-worker.js')
@@ -368,24 +375,33 @@
                     .catch(err => console.log('Service Worker failed', err));
             });
         }
-        
-        let deferredPrompt;
-        const installBtn = document.getElementById('install-btn');
+
         window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('beforeinstallprompt fired');
             e.preventDefault();
             deferredPrompt = e;
-            installBtn.classList.remove('hidden');
-            installBtn.addEventListener('click', () => {
-                installBtn.classList.add('hidden');
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        console.log('User accepted the install prompt');
-                    }
-                    deferredPrompt = null;
-                });
-            });
+            // Show the install button
+            if(installBtn) installBtn.classList.remove('hidden');
         });
+
+        if(installBtn) {
+            installBtn.addEventListener('click', () => {
+                // Hide button
+                installBtn.classList.add('hidden');
+                // Show prompt
+                if(deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            console.log('User accepted the install prompt');
+                        } else {
+                            console.log('User dismissed the install prompt');
+                        }
+                        deferredPrompt = null;
+                    });
+                }
+            });
+        }
     </script>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
