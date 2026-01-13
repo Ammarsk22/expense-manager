@@ -1,40 +1,43 @@
 // 1. Check and Apply Theme on Load
 const themeCheck = () => {
-    // Check if 'theme' is in local storage
     const userTheme = localStorage.getItem('theme');
     const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-    // Apply Dark Mode if:
-    // - User has manually set it to 'dark'
-    // - OR User hasn't set anything, but their system preference is dark
     if (userTheme === 'dark' || (!userTheme && systemTheme)) {
         document.documentElement.classList.add('dark');
+        updateMetaThemeColor('dark'); // Update browser bar color
         return 'dark';
     } else {
         document.documentElement.classList.remove('dark');
+        updateMetaThemeColor('light'); // Update browser bar color
         return 'light';
     }
 };
 
-// Run check immediately when script loads to prevent flash of unstyled content
-themeCheck();
+// 2. Update Browser Address Bar Color (Meta Tag)
+const updateMetaThemeColor = (theme) => {
+    const metaThemeColor = document.querySelector("meta[name=theme-color]");
+    if (metaThemeColor) {
+        // Dark Mode: Gray-800 (#1F2937), Light Mode: Indigo-600 (#4F46E5)
+        metaThemeColor.setAttribute("content", theme === 'dark' ? "#1F2937" : "#4F46E5");
+    }
+}
 
-// 2. Toggle Theme Function (Called when switch is clicked)
+// 3. Toggle Theme Function
 const toggleTheme = () => {
     if (document.documentElement.classList.contains('dark')) {
         document.documentElement.classList.remove('dark');
         localStorage.setItem('theme', 'light');
+        updateMetaThemeColor('light');
     } else {
         document.documentElement.classList.add('dark');
         localStorage.setItem('theme', 'dark');
+        updateMetaThemeColor('dark');
     }
-    
-    // Ensure the toggle button state reflects the change
     updateToggleState();
 };
 
-// 3. Sync Toggle Button State
-// This function ensures the checkbox visual state matches the actual theme
+// 4. Sync Toggle Button State
 const updateToggleState = () => {
     const toggle = document.getElementById('theme-toggle');
     if (toggle) {
@@ -42,15 +45,13 @@ const updateToggleState = () => {
     }
 }
 
-// 4. Event Listener Initialization
+// 5. Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    // Set initial toggle state when page loads
+    themeCheck();
     updateToggleState();
     
-    // Find the toggle button and attach click listener
     const toggleBtn = document.getElementById('theme-toggle');
     if(toggleBtn) {
-        // 'change' event works best for checkboxes
         toggleBtn.addEventListener('change', toggleTheme);
     }
 });
