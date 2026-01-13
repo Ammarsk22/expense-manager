@@ -6,7 +6,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-let expenseChart = null;
+let expenseChart = null; // Pie chart
+let trendChart = null;   // Line chart (New)
 let currentDate = new Date();
 let settings = {
     viewMode: 'monthly',
@@ -23,7 +24,11 @@ function initializeAnalysisPage(userId) {
     const balanceEl = document.getElementById('balance');
     const summaryCards = document.getElementById('summary-cards');
     const expenseListEl = document.getElementById('expense-list');
+    
+    // Canvas Contexts
     const chartCanvas = document.getElementById('expense-overview-chart')?.getContext('2d');
+    const trendCanvas = document.getElementById('trend-chart')?.getContext('2d');
+
     const optionsModal = document.getElementById('options-modal');
     const displayOptionsBtn = document.getElementById('display-options-btn');
     const closeOptionsBtn = document.getElementById('close-options-btn');
@@ -37,6 +42,7 @@ function initializeAnalysisPage(userId) {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth();
         
+        // --- 1. Date Logic ---
         switch (settings.viewMode) {
             case 'daily':
                 startDate = new Date(year, month, currentDate.getDate());
@@ -72,6 +78,7 @@ function initializeAnalysisPage(userId) {
         const startStr = startDate.toISOString().split('T')[0];
         const endStr = endDate.toISOString().split('T')[0];
 
+        // --- 2. Carry Over Logic ---
         let carryOverAmount = 0;
         if (settings.carryOver && settings.viewMode === 'monthly') {
             const prevMonthDate = new Date(year, month - 1, 1);
@@ -84,55 +91,207 @@ function initializeAnalysisPage(userId) {
             });
         }
         
+        // --- 3. Fetch Data ---
         const snapshot = await transactionsRef.where('date', '>=', startStr).where('date', '<=', endStr).get();
-        let totalIncome = 0, totalExpense = 0, expenseByCategory = {};
+        let totalIncome = 0, totalExpense = 0;
+        let expenseByCategory = {};
+        
+        // Trend Data Structures
+        let trendLabels = [];
+        let trendIncome = [];
+        let trendExpense = [];
+        let trendDataMap = {}; // Key: "YYYY-MM-DD" or "Month" -> {income: 0, expense: 0}
+
+        // Initialize Trend Map based on View Mode
+        if (settings.viewMode === 'yearly') {
+            for(let i=0; i<12; i++) {
+                // Key: "0", "1", ... "11" (Month Index)
+                trendDataMap[i] = { income: 0, expense: 0 };
+                trendLabels.push(new Date(year, i).toLocaleString('default', { month: 'short' }));
+            }
+        } else {
+            // For Weekly, Monthly, 3-Months: We categorize by Day
+            // Generate all days in range to ensure empty days are shown on chart (Optional, but looks better)
+            // Simplified: Just use the transaction dates found or loop range. 
+            // Better: Iterate from startDate to endDate
+            let tempDate = new Date(startDate);
+            while(tempDate <= endDate) {
+                const key = tempDate.toISOString().split('T')[0];
+                trendDataMap[key] = { income: 0, expense: 0 };
+                // For labels: show Day number or Short date
+                trendLabels.push(settings.viewMode === 'weekly' ? tempDate.toLocaleDateString('en-GB', {weekday: 'short'}) : tempDate.getDate());
+                tempDate.setDate(tempDate.getDate() + 1);
+            }
+        }
+
         snapshot.forEach(doc => {
             const t = doc.data();
+            
+            // Total Sums
             if (t.type === 'income') totalIncome += t.amount;
             else if (t.type === 'expense') {
                 totalExpense += t.amount;
                 expenseByCategory[t.category] = (expenseByCategory[t.category] || 0) + t.amount;
             }
+
+            // Trend Data Aggregation
+            let key;
+            if (settings.viewMode === 'yearly') {
+                key = new Date(t.date).getMonth(); // 0-11
+            } else {
+                key = t.date; // YYYY-MM-DD
+            }
+
+            if(trendDataMap[key]) {
+                if (t.type === 'income') trendDataMap[key].income += t.amount;
+                else trendDataMap[key].expense += t.amount;
+            }
         });
 
-        // Reverted to Rupee Symbol
-        totalIncomeEl.textContent = `₹${totalIncome.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        totalExpenseEl.textContent = `₹${totalExpense.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        // Convert Map to Arrays for Chart
+        if (settings.viewMode === 'yearly') {
+             trendIncome = Object.values(trendDataMap).map(d => d.income);
+             trendExpense = Object.values(trendDataMap).map(d => d.expense);
+        } else {
+             // Re-map keys to match the generated labels/keys order
+             // Note: In non-yearly loop above, we inserted keys in order.
+             trendIncome = Object.values(trendDataMap).map(d => d.income);
+             trendExpense = Object.values(trendDataMap).map(d => d.expense);
+        }
+
+        // Update UI Text
+        totalIncomeEl.textContent = `₹${totalIncome.toLocaleString('en-IN')}`;
+        totalExpenseEl.textContent = `₹${totalExpense.toLocaleString('en-IN')}`;
         const balance = totalIncome - totalExpense + carryOverAmount;
-        balanceEl.textContent = `₹${balance.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        balanceEl.textContent = `₹${balance.toLocaleString('en-IN')}`;
         balanceEl.classList.toggle('text-red-500', balance < 0);
         
+        // Render Visuals
         renderExpenseList(expenseByCategory, totalExpense);
         if (chartCanvas) renderExpenseChart(chartCanvas, expenseByCategory);
+        if (trendCanvas) renderTrendChart(trendCanvas, trendLabels, trendIncome, trendExpense);
     };
     
+    // --- Render Expense List ---
     const renderExpenseList = (data, total) => {
         expenseListEl.innerHTML = '';
         if (Object.keys(data).length === 0) {
-            expenseListEl.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center">No expense data for this period.</p>';
+            expenseListEl.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-4">No expense data.</p>';
             return;
         }
         const sortedCategories = Object.entries(data).sort((a, b) => b[1] - a[1]);
         sortedCategories.forEach(([category, amount]) => {
-            const percentage = total > 0 ? ((amount / total) * 100).toFixed(2) : 0;
-            // Reverted to Rupee Symbol
-            expenseListEl.innerHTML += `<div class="flex items-center justify-between p-2 border-b border-gray-100 dark:border-gray-700"><div><p class="font-bold text-gray-800 dark:text-gray-200">${category}</p><div class="w-24 bg-gray-200 dark:bg-gray-600 rounded-full h-1.5 mt-1"><div class="bg-indigo-600 h-1.5 rounded-full" style="width: ${percentage}%"></div></div></div><div class="text-right"><p class="font-semibold text-red-500">- ₹${amount.toLocaleString('en-IN', {minimumFractionDigits: 2})}</p><p class="text-xs text-gray-500 dark:text-gray-400">${percentage}%</p></div></div>`;
+            const percentage = total > 0 ? ((amount / total) * 100).toFixed(1) : 0;
+            expenseListEl.innerHTML += `
+                <div class="flex items-center justify-between p-2 border-b border-gray-100 dark:border-gray-700">
+                    <div>
+                        <p class="font-bold text-gray-800 dark:text-gray-200 text-sm">${category}</p>
+                        <div class="w-24 bg-gray-200 dark:bg-gray-600 rounded-full h-1.5 mt-1">
+                            <div class="bg-indigo-600 h-1.5 rounded-full" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-semibold text-red-500 text-sm">- ₹${amount.toLocaleString('en-IN')}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">${percentage}%</p>
+                    </div>
+                </div>`;
         });
     };
 
+    // --- Render Pie Chart ---
     const renderExpenseChart = (ctx, data) => {
         if (expenseChart) expenseChart.destroy();
         expenseChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels: Object.keys(data),
-                datasets: [{ data: Object.values(data), backgroundColor: ['#EF4444', '#3B82F6', '#F59E0B', '#10B981', '#8B5CF6', '#EC4899'], borderColor: '#FFFFFF', borderWidth: 2 }]
+                datasets: [{ 
+                    data: Object.values(data), 
+                    backgroundColor: ['#EF4444', '#3B82F6', '#F59E0B', '#10B981', '#8B5CF6', '#EC4899', '#6366F1'], 
+                    borderColor: document.documentElement.classList.contains('dark') ? '#1F2937' : '#FFFFFF', 
+                    borderWidth: 2 
+                }]
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#374151' } } } }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { 
+                    legend: { position: 'right', labels: { color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#374151', font: {size: 10} } } 
+                } 
+            }
         });
     };
 
-    // UI Updates
+    // --- Render Trend Chart (NEW) ---
+    const renderTrendChart = (ctx, labels, incomeData, expenseData) => {
+        if (trendChart) trendChart.destroy();
+        const isDark = document.documentElement.classList.contains('dark');
+        
+        trendChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Income',
+                        data: incomeData,
+                        borderColor: '#10B981', // Green
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.3,
+                        fill: true,
+                        pointRadius: 2
+                    },
+                    {
+                        label: 'Expense',
+                        data: expenseData,
+                        borderColor: '#EF4444', // Red
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        tension: 0.3,
+                        fill: true,
+                        pointRadius: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: { labels: { color: isDark ? '#e5e7eb' : '#374151' } },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += '₹' + context.parsed.y.toLocaleString('en-IN');
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: isDark ? '#9CA3AF' : '#4B5563', maxTicksLimit: 10 },
+                        grid: { color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' }
+                    },
+                    y: {
+                        ticks: { color: isDark ? '#9CA3AF' : '#4B5563' },
+                        grid: { color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    };
+
+    // --- Event Listeners (Navigation & Options) ---
     const updateOptionsUI = () => {
         viewModeOptions.querySelectorAll('p').forEach(p => {
             p.classList.remove('font-bold', 'text-indigo-600', 'dark:text-indigo-400');
@@ -209,5 +368,6 @@ function initializeAnalysisPage(userId) {
         }
     });
 
+    // Initial Load
     fetchAndDisplayData();
 }

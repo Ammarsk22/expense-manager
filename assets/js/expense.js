@@ -6,6 +6,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+// Skeleton Loader Function
+function getTransactionSkeleton() {
+    return `
+        <div class="flex justify-between items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
+            <div class="space-y-2">
+                <div class="skeleton h-4 w-32"></div>
+                <div class="skeleton h-3 w-24"></div>
+            </div>
+            <div class="skeleton h-6 w-16"></div>
+        </div>
+    `;
+}
+
 function initializeExpenseTracking(userId) {
     const transactionForm = document.getElementById('transaction-form');
     const transactionList = document.getElementById('transaction-list');
@@ -228,6 +241,9 @@ function initializeExpenseTracking(userId) {
 
     // --- 4. REAL-TIME LIST DISPLAY ---
     if (transactionList) {
+        // Show Skeleton Loading immediately
+        transactionList.innerHTML = getTransactionSkeleton() + getTransactionSkeleton() + getTransactionSkeleton();
+
         // Updated Sorting: Date first, then CreatedAt
         transactionsRef.orderBy('date', 'desc').orderBy('createdAt', 'desc').limit(10).onSnapshot(snapshot => {
             transactionList.innerHTML = '';
