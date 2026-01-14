@@ -30,7 +30,7 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src='https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js'></script>
+    
     <link rel="stylesheet" href="assets/css/style.css">
     
     <style>
@@ -47,10 +47,17 @@
         }
         @keyframes scan { 0% { top: 0; } 50% { top: 100%; } 100% { top: 0; } }
 
-        /* PWA Fixes */
-        html, body { height: 100%; overscroll-behavior-y: none; }
+        /* PWA Fixes & Pull-to-Refresh */
+        html, body { height: 100%; overscroll-behavior-y: contain; }
         .pwa-standalone #install-btn { display: none !important; }
         .pwa-standalone main { padding-top: env(safe-area-inset-top) !important; }
+
+        /* Refresh Spinner */
+        #ptr-spinner {
+            position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+            z-index: 50; transition: all 0.3s ease; opacity: 0;
+        }
+        #ptr-spinner.visible { top: 60px; opacity: 1; }
     </style>
 </head>
 <body class="font-sans bg-[#EAE5E1] dark:bg-gray-900 transition-colors duration-200 select-none">
@@ -86,8 +93,12 @@
             </div>
         </aside>
 
-        <main class="flex-1 p-4 pb-24 md:p-10 md:pt-10 overflow-y-auto min-h-screen relative z-10">
+        <main id="main-content" class="flex-1 p-4 pb-24 md:p-10 md:pt-10 overflow-y-auto min-h-screen relative z-10">
             
+            <div id="ptr-spinner" class="bg-white dark:bg-gray-800 p-2 rounded-full shadow-lg text-indigo-600">
+                <i class="fas fa-sync-alt fa-spin text-xl"></i>
+            </div>
+
             <header class="flex justify-between items-start mb-6 pt-2">
                 <div>
                     <h2 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white" data-i18n="welcome_back">Welcome Back!</h2>
@@ -156,7 +167,8 @@
                             </div>
                         </div>
 
-                        <input type="text" id="description" name="description" required class="mt-1 block w-full py-2.5 px-3 border border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm" placeholder="e.g., Netflix">
+                        <input type="text" id="description" name="description" enterkeyhint="done" required class="mt-1 block w-full py-2.5 px-3 border border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm" placeholder="e.g., Netflix">
+                        
                         <input type="date" id="date" name="date" required class="mt-1 block w-full py-2.5 px-3 border border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm">
 
                         <div class="flex items-center py-1">
@@ -229,8 +241,9 @@
     </div>
     
     <script>
-        // 1. GLOBAL FUNCTION DEFINITIONS (Must be first)
+        // GLOBAL Functions
         function openSidebarMenu() {
+            if (navigator.vibrate) navigator.vibrate(15);
             const sidebar = document.getElementById('sidebar');
             const backdrop = document.getElementById('sidebar-backdrop');
             sidebar.classList.remove('-translate-x-full');
@@ -239,6 +252,7 @@
         }
 
         function closeSidebarMenu() {
+            if (navigator.vibrate) navigator.vibrate(15);
             const sidebar = document.getElementById('sidebar');
             const backdrop = document.getElementById('sidebar-backdrop');
             sidebar.classList.add('-translate-x-full');
@@ -250,11 +264,17 @@
             return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
         }
 
-        // 2. DOM CONTENT LOADED
         document.addEventListener('DOMContentLoaded', () => {
             if (isStandalone()) {
                 document.body.classList.add('pwa-standalone');
             }
+            
+            const navLinks = document.querySelectorAll('nav a, .md\\:hidden a');
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    if (navigator.vibrate) navigator.vibrate(10);
+                });
+            });
 
             // Calculator Logic
             const calcToggleBtn = document.getElementById('calc-toggle-btn'); 
@@ -263,21 +283,25 @@
             let currentExpression = '';
             
             if(calcToggleBtn && calculator && amountInput) {
-                calcToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); calculator.classList.toggle('active'); });
+                calcToggleBtn.addEventListener('click', (e) => { 
+                    e.stopPropagation(); 
+                    if (navigator.vibrate) navigator.vibrate(15); 
+                    calculator.classList.toggle('active'); 
+                });
                 
                 calculator.addEventListener('click', (e) => {
                     e.stopPropagation(); const btn = e.target; 
                     if (!btn.classList.contains('calc-btn')) return; 
+                    if (navigator.vibrate) navigator.vibrate(10);
+
                     const value = btn.textContent;
                     if (value === '=') { try { amountInput.value = Function('"use strict";return (' + currentExpression + ')')(); currentExpression = ''; calculator.classList.remove('active'); } catch { amountInput.value = 'Error'; currentExpression = ''; } } 
                     else if (value === 'C') { currentExpression = ''; amountInput.value = ''; } 
                     else { currentExpression += value; amountInput.value = currentExpression; }
                 });
-                
                 document.addEventListener('click', (e) => { if (!calculator.contains(e.target) && !calcToggleBtn.contains(e.target)) calculator.classList.remove('active'); });
             }
 
-            // Date
             const dateInput = document.getElementById('date');
             if(dateInput) dateInput.valueAsDate = new Date();
         });

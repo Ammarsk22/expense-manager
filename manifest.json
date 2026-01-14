@@ -21,5 +21,21 @@
       "type": "image/png"
     }
   ],
+  "shortcuts": [
+    {
+      "name": "Add Transaction",
+      "short_name": "Add",
+      "description": "Add a new expense or income",
+      "url": "./index.html?action=add",
+      "icons": [{ "src": "assets/img/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Scan Receipt",
+      "short_name": "Scan",
+      "description": "Scan a bill receipt",
+      "url": "./index.html?action=scan",
+      "icons": [{ "src": "assets/img/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
   "prefer_related_applications": false
 }
