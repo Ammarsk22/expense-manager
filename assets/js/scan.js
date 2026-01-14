@@ -1,121 +1,156 @@
-/**
- * Receipt Scanning Logic using Tesseract.js
- */
-
 document.addEventListener('DOMContentLoaded', () => {
     const scanBtn = document.getElementById('scan-btn');
+    const closeBtn = document.getElementById('close-scan');
     const fileInput = document.getElementById('scan-input');
     const modal = document.getElementById('scan-modal');
-    const closeBtn = document.getElementById('close-scan');
     const preview = document.getElementById('scan-preview');
+    const anim = document.getElementById('scan-anim');
     const loader = document.getElementById('scan-loader');
-    const scanAnim = document.getElementById('scan-anim');
-    const statusText = document.getElementById('scan-status');
+    const status = document.getElementById('scan-status');
 
-    if (!scanBtn || !fileInput) return;
+    let worker = null;
 
-    // Trigger File Input
-    scanBtn.addEventListener('click', () => {
-        fileInput.click();
-    });
-
-    // Handle File Selection
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            showModal(file);
-            processImage(file);
-        }
-    });
-
-    closeBtn.addEventListener('click', () => {
-        modal.classList.add('hidden');
-        fileInput.value = ''; // Reset input
-    });
-
-    function showModal(file) {
-        modal.classList.remove('hidden');
-        loader.classList.remove('hidden');
-        scanAnim.classList.remove('hidden');
-        statusText.textContent = "Initializing Scanner...";
+    if (scanBtn && fileInput && modal) {
         
-        // Show Image Preview
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            preview.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
+        // --- LAZY LOAD TESSERACT & OPEN MODAL ---
+        scanBtn.addEventListener('click', () => {
+            if (navigator.vibrate) navigator.vibrate(15);
+            
+            // Check if Tesseract is loaded
+            if (typeof Tesseract === 'undefined') {
+                // Show loading state while script loads
+                const originalText = status ? status.innerText : '';
+                if(status) status.innerText = "Loading scanner engine...";
+                
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js';
+                
+                script.onload = () => {
+                    if(status) status.innerText = originalText;
+                    fileInput.click();
+                };
+                
+                script.onerror = () => {
+                    alert("Failed to load scanner. Please check internet connection.");
+                };
+                
+                document.head.appendChild(script);
+            } else {
+                // Already loaded, just open input
+                fileInput.click();
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.src = e.target.result;
+                    modal.classList.remove('hidden');
+                    anim.classList.remove('hidden');
+                    loader.classList.remove('hidden');
+                    status.innerText = "Initializing OCR...";
+                    processImage(file);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        if(closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                modal.classList.add('hidden');
+                fileInput.value = ''; 
+                preview.src = '';
+                if(worker) {
+                    worker.terminate();
+                    worker = null;
+                }
+            });
+        }
     }
 
-    function processImage(file) {
-        Tesseract.recognize(
-            file,
-            'eng',
-            {
+    async function processImage(file) {
+        try {
+            status.innerText = "Recognizing text...";
+            
+            // Tesseract worker creation
+            worker = Tesseract.createWorker({
                 logger: m => {
-                    if (m.status === 'recognizing text') {
-                        statusText.textContent = `Scanning: ${Math.round(m.progress * 100)}%`;
+                    if(m.status === 'recognizing text') {
+                        status.innerText = `Scanning... ${Math.round(m.progress * 100)}%`;
                     }
                 }
-            }
-        ).then(({ data: { text } }) => {
-            console.log('Scanned Text:', text);
-            parseAndFill(text);
+            });
+
+            await worker.load();
+            await worker.loadLanguage('eng');
+            await worker.initialize('eng');
             
-            // Clean up UI
-            loader.classList.add('hidden');
-            scanAnim.classList.add('hidden');
-            statusText.textContent = "Scan Complete!";
+            const { data: { text } } = await worker.recognize(file);
+            
+            status.innerText = "Processing data...";
+            parseReceiptData(text);
+            
+            await worker.terminate();
+            worker = null;
+            
+            // Close modal after delay
             setTimeout(() => {
                 modal.classList.add('hidden');
                 fileInput.value = '';
             }, 1000);
-        }).catch(err => {
-            console.error(err);
-            statusText.textContent = "Error scanning image.";
+
+        } catch (error) {
+            console.error(error);
+            status.innerText = "Error scanning. Try again.";
+            anim.classList.add('hidden');
             loader.classList.add('hidden');
-        });
+        }
     }
 
-    function parseAndFill(text) {
-        // Simple Regex for Date (DD/MM/YYYY or DD-MM-YYYY)
-        const dateMatch = text.match(/(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/);
-        
-        // Regex for Amount (Look for numbers with decimals, often after TOTAL or AMOUNT)
-        // This is a basic pattern; receipts vary wildly.
-        // Strategies: Look for largest number, or number near 'Total'
-        const amountMatches = text.match(/(\d+[.,]\d{2})/g); 
-        
-        // Default to today
-        if (dateMatch) {
-            // Convert to YYYY-MM-DD for input
-            // Logic needed to parse DD/MM/YYYY vs MM/DD/YYYY based on locale if strict
-            // For now, assume detected date might need manual correction or simple ISO conversion
-            // let dateVal = new Date(dateMatch[0]).toISOString().split('T')[0];
-            // document.getElementById('date').value = dateVal;
-            console.log("Date found:", dateMatch[0]);
-        }
+    function parseReceiptData(text) {
+        const lines = text.split('\n');
+        let total = 0;
+        let date = null;
+        let merchant = "Scanned Receipt";
 
-        let extractedAmount = null;
-        if (amountMatches) {
-            // Usually the total is the highest number or the last one found
-            // Let's take the largest value found to be safe as 'Total'
-            const values = amountMatches.map(v => parseFloat(v.replace(',', '.')));
-            extractedAmount = Math.max(...values);
+        // Simple Heuristics
+        const amountRegex = /(\d+\.\d{2})/;
+        const dateRegex = /(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/;
+
+        for (let line of lines) {
+            // Find biggest amount
+            const matchAmount = line.match(amountRegex);
+            if (matchAmount) {
+                const val = parseFloat(matchAmount[1]);
+                if (val > total) total = val;
+            }
+
+            // Find date
+            if (!date) {
+                const matchDate = line.match(dateRegex);
+                if (matchDate) {
+                    // Try to parse date (naive)
+                    try {
+                        const d = new Date(matchDate[1]);
+                        if(!isNaN(d.getTime())) date = d.toISOString().split('T')[0];
+                    } catch(e) {}
+                }
+            }
+            
+            // Guess merchant (first non-empty line usually)
+            if(merchant === "Scanned Receipt" && line.trim().length > 3 && !line.match(/\d/)) {
+                merchant = line.trim();
+            }
         }
 
         // Fill Form
-        if (extractedAmount) {
-            document.getElementById('amount').value = extractedAmount.toFixed(2);
-        }
+        document.getElementById('amount').value = total || '';
+        document.getElementById('description').value = merchant;
+        if(date) document.getElementById('date').value = date;
         
-        // Try to guess description from first few lines (Merchant Name)
-        const lines = text.split('\n').filter(line => line.trim().length > 3);
-        if (lines.length > 0) {
-            // Use first valid line as description (Store Name usually at top)
-            document.getElementById('description').value = lines[0].substring(0, 20); 
-        }
-
-        alert(`Scanned!\nAmount: ${extractedAmount || 'Not found'}\nCheck details before saving.`);
+        // Haptic feedback
+        if(navigator.vibrate) navigator.vibrate([50, 50, 50]);
     }
 });

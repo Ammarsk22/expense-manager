@@ -1,28 +1,29 @@
 /**
  * FinTrack Security Module
- * Handles App Lock, PIN Verification, and Settings
+ * Handles App Lock, PIN Verification, and Biometric Authentication (WebAuthn)
  */
 
 const Security = {
     key: 'fintrack_pin',
     sessionKey: 'fintrack_unlocked',
+    bioKey: 'fintrack_bio_id', // Stores the Credential ID for WebAuthn
     
     init() {
-        this.renderPinModal(); // Prepare the modal structure
-        this.checkLock();      // Check if locking is needed on load
-        this.bindSettings();   // Bind listeners for Settings page
+        this.renderPinModal(); 
+        this.checkLock();      
+        this.bindSettings();   
     },
 
-    getPin() {
-        return localStorage.getItem(this.key);
-    },
+    // --- PIN & Storage Helpers ---
+    getPin() { return localStorage.getItem(this.key); },
+    setPin(pin) { localStorage.setItem(this.key, pin); },
+    
+    getBioId() { return localStorage.getItem(this.bioKey); },
+    setBioId(id) { localStorage.setItem(this.bioKey, id); },
 
-    setPin(pin) {
-        localStorage.setItem(this.key, pin);
-    },
-
-    removePin() {
+    removeSecurity() {
         localStorage.removeItem(this.key);
+        localStorage.removeItem(this.bioKey); // Remove biometric data
         sessionStorage.removeItem(this.sessionKey);
     },
 
@@ -30,8 +31,18 @@ const Security = {
         return this.getPin() && !sessionStorage.getItem(this.sessionKey);
     },
 
-    checkLock() {
+    // --- Main Lock Logic ---
+    async checkLock() {
         if (this.isLocked()) {
+            // Agar Biometric set hai, to pehle usse try karein
+            if (this.getBioId()) {
+                const success = await this.verifyBiometric();
+                if (success) {
+                    this.unlock();
+                    return;
+                }
+            }
+            // Agar biometric fail ho ya na ho, PIN modal dikhayein
             this.showModal('unlock');
         }
     },
@@ -39,9 +50,97 @@ const Security = {
     unlock() {
         sessionStorage.setItem(this.sessionKey, 'true');
         this.hideModal();
+        if (navigator.vibrate) navigator.vibrate(50); // Haptic success
     },
 
-    // --- UI Logic ---
+    // --- Biometric (WebAuthn) Logic ---
+    
+    // 1. Check if device supports Biometric
+    async isBiometricAvailable() {
+        if (!window.PublicKeyCredential) return false;
+        return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    },
+
+    // 2. Register/Setup Biometric (Create Credential)
+    async registerBiometric() {
+        if (!window.PublicKeyCredential) {
+            alert("Your device does not support Biometric Authentication.");
+            return false;
+        }
+
+        const challenge = new Uint8Array(32);
+        window.crypto.getRandomValues(challenge);
+
+        const publicKey = {
+            challenge: challenge,
+            rp: { name: "FinTrack Expense Manager" },
+            user: {
+                id: new Uint8Array(16),
+                name: "user@fintrack",
+                displayName: "FinTrack User"
+            },
+            pubKeyCredParams: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
+            authenticatorSelection: {
+                authenticatorAttachment: "platform", // Forces built-in fingerprint/faceID
+                userVerification: "required"
+            },
+            timeout: 60000
+        };
+
+        try {
+            const credential = await navigator.credentials.create({ publicKey });
+            // Save the Credential ID to use for verification later
+            // We need to convert ArrayBuffer to Base64 string to store in localStorage
+            const credId = this.bufferToBase64(credential.rawId);
+            this.setBioId(credId);
+            return true;
+        } catch (err) {
+            console.error("Biometric Setup Failed:", err);
+            return false;
+        }
+    },
+
+    // 3. Verify Biometric (Unlock App)
+    async verifyBiometric() {
+        const savedId = this.getBioId();
+        if (!savedId) return false;
+
+        const challenge = new Uint8Array(32);
+        window.crypto.getRandomValues(challenge);
+
+        try {
+            const credential = await navigator.credentials.get({
+                publicKey: {
+                    challenge: challenge,
+                    allowCredentials: [{
+                        id: this.base64ToBuffer(savedId),
+                        type: "public-key"
+                    }],
+                    userVerification: "required"
+                }
+            });
+            // If we get a credential back, the OS successfully verified the user
+            return !!credential;
+        } catch (err) {
+            console.log("Biometric Verification Cancelled/Failed", err);
+            return false;
+        }
+    },
+
+    // Helpers for ArrayBuffer <-> Base64
+    bufferToBase64(buffer) {
+        return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+    },
+    base64ToBuffer(base64) {
+        const binaryString = atob(base64);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) bytes[i] = binaryString.charCodeAt(i);
+        return bytes.buffer;
+    },
+
+
+    // --- UI Logic (PIN Modal) ---
     
     renderPinModal() {
         if (document.getElementById('pin-modal')) return;
@@ -54,6 +153,10 @@ const Security = {
                     </div>
                     <h2 id="pin-title" class="text-2xl font-bold text-white mb-2">Enter PIN</h2>
                     <p id="pin-subtitle" class="text-gray-400 text-sm">Please enter your 4-digit PIN</p>
+                    
+                    <button id="bio-unlock-btn" class="hidden mt-4 px-4 py-2 bg-gray-800 rounded-full text-indigo-400 text-sm border border-gray-700 hover:bg-gray-700 transition">
+                        <i class="fas fa-fingerprint mr-2"></i> Use Biometric
+                    </button>
                 </div>
 
                 <div class="flex gap-4 mb-8">
@@ -83,11 +186,17 @@ const Security = {
         `;
         document.body.insertAdjacentHTML('beforeend', modalHtml);
         this.attachPadEvents();
+        
+        // Listener for manual biometric button on lock screen
+        document.getElementById('bio-unlock-btn').addEventListener('click', async () => {
+             const success = await this.verifyBiometric();
+             if(success) this.unlock();
+        });
     },
 
     currentInput: '',
-    mode: 'unlock', // unlock, setup, verify, disable
-    tempPin: '', // To store first entry during setup
+    mode: 'unlock', 
+    tempPin: '', 
 
     showModal(mode) {
         this.mode = mode;
@@ -97,21 +206,28 @@ const Security = {
         const modal = document.getElementById('pin-modal');
         const title = document.getElementById('pin-title');
         const subtitle = document.getElementById('pin-subtitle');
+        const bioBtn = document.getElementById('bio-unlock-btn');
 
         modal.classList.remove('hidden');
 
         if (mode === 'unlock') {
             title.textContent = 'FinTrack Locked';
             subtitle.textContent = 'Enter your PIN to continue';
+            // Show bio button only if enrolled
+            if(this.getBioId()) bioBtn.classList.remove('hidden');
+            else bioBtn.classList.add('hidden');
         } else if (mode === 'setup') {
             title.textContent = 'Set New PIN';
             subtitle.textContent = 'Create a 4-digit PIN';
+            bioBtn.classList.add('hidden');
         } else if (mode === 'verify') {
             title.textContent = 'Confirm PIN';
             subtitle.textContent = 'Re-enter your PIN';
+            bioBtn.classList.add('hidden');
         } else if (mode === 'disable') {
             title.textContent = 'Disable Lock';
             subtitle.textContent = 'Enter PIN to disable';
+            bioBtn.classList.add('hidden');
         }
     },
 
@@ -125,10 +241,14 @@ const Security = {
         const backspace = document.getElementById('pin-backspace');
 
         btns.forEach(btn => {
-            btn.addEventListener('click', (e) => this.handleInput(e.target.innerText));
+            btn.addEventListener('click', (e) => {
+                if (navigator.vibrate) navigator.vibrate(15);
+                this.handleInput(e.target.innerText)
+            });
         });
 
         backspace.addEventListener('click', () => {
+            if (navigator.vibrate) navigator.vibrate(15);
             this.currentInput = this.currentInput.slice(0, -1);
             this.updateDots();
         });
@@ -139,9 +259,8 @@ const Security = {
             this.currentInput += num;
             this.updateDots();
         }
-
         if (this.currentInput.length === 4) {
-            setTimeout(() => this.processPin(), 300); // Small delay for UX
+            setTimeout(() => this.processPin(), 300);
         }
     },
 
@@ -176,7 +295,7 @@ const Security = {
             if (this.currentInput === this.tempPin) {
                 this.setPin(this.currentInput);
                 this.hideModal();
-                this.updateSettingsUI(true);
+                this.updateSettingsUI(true, false);
                 alert('PIN Setup Successfully!');
             } else {
                 alert('PINs do not match. Try again.');
@@ -185,9 +304,9 @@ const Security = {
         }
         else if (this.mode === 'disable') {
             if (this.currentInput === this.getPin()) {
-                this.removePin();
+                this.removeSecurity();
                 this.hideModal();
-                this.updateSettingsUI(false);
+                this.updateSettingsUI(false, false);
                 alert('App Lock Disabled.');
             } else {
                 this.shakeModal();
@@ -198,51 +317,85 @@ const Security = {
     },
 
     shakeModal() {
+        if (navigator.vibrate) navigator.vibrate([50, 50, 50]);
         const dots = document.querySelector('.flex.gap-4');
-        dots.classList.add('animate-pulse', 'text-red-500'); // Simple visual cue
+        dots.classList.add('animate-pulse', 'text-red-500');
         setTimeout(() => dots.classList.remove('animate-pulse', 'text-red-500'), 500);
     },
 
     // --- Settings Page Integration ---
     
     bindSettings() {
-        const toggle = document.getElementById('pin-toggle');
+        const pinToggle = document.getElementById('pin-toggle');
+        const bioToggle = document.getElementById('bio-toggle');
         const changeBtn = document.getElementById('change-pin-btn');
 
-        if (toggle) {
-            // Set initial state
-            toggle.checked = !!this.getPin();
+        // Initial State
+        const hasPin = !!this.getPin();
+        const hasBio = !!this.getBioId();
 
-            toggle.addEventListener('click', (e) => {
-                e.preventDefault(); // Control manually
+        if (pinToggle) pinToggle.checked = hasPin;
+        if (bioToggle) {
+            bioToggle.checked = hasBio;
+            bioToggle.disabled = !hasPin; // Enable bio only if PIN is set
+        }
+
+        // 1. PIN Toggle
+        if (pinToggle) {
+            pinToggle.addEventListener('click', (e) => {
+                e.preventDefault();
                 if (this.getPin()) {
-                    // Try to disable
                     this.showModal('disable');
                 } else {
-                    // Try to enable
                     this.showModal('setup');
+                }
+            });
+        }
+
+        // 2. Biometric Toggle
+        if (bioToggle) {
+            bioToggle.addEventListener('click', async (e) => {
+                e.preventDefault();
+                
+                // Agar pehle se ON hai, to OFF kar do
+                if (this.getBioId()) {
+                    this.setBioId('');
+                    bioToggle.checked = false;
+                    alert("Biometric Disabled");
+                    return;
+                }
+
+                // Agar OFF hai, to ON karne ka try karo
+                const success = await this.registerBiometric();
+                if (success) {
+                    bioToggle.checked = true;
+                    alert("Biometric Enabled Successfully!");
                 }
             });
         }
 
         if (changeBtn) {
             changeBtn.addEventListener('click', () => {
-                if (this.getPin()) {
-                    this.showModal('setup'); // Overwrite logic
-                } else {
-                    alert('Please enable PIN first.');
-                }
+                if (this.getPin()) this.showModal('setup');
+                else alert('Please enable PIN first.');
             });
         }
     },
 
-    updateSettingsUI(isEnabled) {
-        const toggle = document.getElementById('pin-toggle');
-        if (toggle) toggle.checked = isEnabled;
+    updateSettingsUI(isPinEnabled, isBioEnabled) {
+        const pinToggle = document.getElementById('pin-toggle');
+        const bioToggle = document.getElementById('bio-toggle');
+        
+        if (pinToggle) pinToggle.checked = isPinEnabled;
+        if (bioToggle) {
+            bioToggle.checked = isBioEnabled;
+            bioToggle.disabled = !isPinEnabled; // Disable bio if PIN removed
+            if(!isPinEnabled) bioToggle.checked = false;
+        }
     }
 };
 
-// Initialize on Load
+// Initialize
 document.addEventListener('DOMContentLoaded', () => {
     Security.init();
 });

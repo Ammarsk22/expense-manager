@@ -6,45 +6,88 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Skeleton Loader Function
+// Skeleton Loader
 function getTransactionSkeleton() {
     return `
-        <div class="flex justify-between items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
-            <div class="space-y-2">
+        <div class="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg mb-3 shadow-sm border border-gray-100 dark:border-gray-700">
+            <div class="skeleton h-10 w-10 rounded-full mr-3"></div>
+            <div class="flex-1 space-y-2">
                 <div class="skeleton h-4 w-32"></div>
-                <div class="skeleton h-3 w-24"></div>
+                <div class="skeleton h-3 w-20"></div>
             </div>
-            <div class="skeleton h-6 w-16"></div>
+            <div class="skeleton h-5 w-16"></div>
         </div>
     `;
+}
+
+// Icon Helper
+function getCategoryIcon(category, type) {
+    const map = {
+        'food': 'fa-utensils',
+        'travel': 'fa-car',
+        'shopping': 'fa-shopping-bag',
+        'bills': 'fa-file-invoice-dollar',
+        'entertainment': 'fa-film',
+        'health': 'fa-medkit',
+        'education': 'fa-graduation-cap',
+        'grocery': 'fa-carrot',
+        'salary': 'fa-money-bill-wave',
+        'bonus': 'fa-coins',
+        'allowance': 'fa-hand-holding-usd',
+        'investment': 'fa-chart-line',
+        'fuel': 'fa-gas-pump',
+        'rent': 'fa-home',
+        'gift': 'fa-gift',
+        'others': 'fa-tag'
+    };
+    const key = category.toLowerCase();
+    // Default icons based on type if category not found
+    const defaultIcon = type === 'income' ? 'fa-wallet' : 'fa-receipt';
+    return map[key] || defaultIcon;
+}
+
+// Date Formatter Helper
+function formatDateHeader(dateString) {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    // Reset times for accurate comparison
+    date.setHours(0,0,0,0);
+    today.setHours(0,0,0,0);
+    yesterday.setHours(0,0,0,0);
+
+    if (date.getTime() === today.getTime()) return "Today";
+    if (date.getTime() === yesterday.getTime()) return "Yesterday";
+    
+    return new Date(dateString).toLocaleDateString('en-US', { 
+        day: 'numeric', month: 'short', year: 'numeric' 
+    });
 }
 
 function initializeExpenseTracking(userId) {
     const transactionForm = document.getElementById('transaction-form');
     const transactionList = document.getElementById('transaction-list');
     
-    // Helper: Get Currency Symbol (Default to ₹ if script not loaded)
     const getAppCurrency = () => {
         return typeof getCurrency === 'function' ? getCurrency() : '₹';
     };
 
-    // Firestore References
     const accountsRef = db.collection('users').doc(userId).collection('accounts');
     const categoriesRef = db.collection('users').doc(userId).collection('categories'); 
     const transactionsRef = db.collection('users').doc(userId).collection('transactions');
     const templatesRef = db.collection('users').doc(userId).collection('templates');
 
-    // Global data storage
     let allAccounts = [];
     let allTransactions = [];
     let allCategories = [];
 
-    // --- 1. SMART ACCOUNT DROPDOWN (Calculates Real Balance) ---
+    // --- 1. SMART ACCOUNT DROPDOWN ---
     const accountSelect = document.getElementById('account');
     
     const renderAccountDropdown = () => {
         if (!accountSelect) return;
-        
         const currentVal = accountSelect.value; 
         
         if (allAccounts.length === 0) {
@@ -53,14 +96,10 @@ function initializeExpenseTracking(userId) {
         }
 
         accountSelect.innerHTML = '<option value="" disabled selected>Select Account</option>';
-        
         const currencySymbol = getAppCurrency();
 
         allAccounts.forEach(acc => {
-            // Calculate Balance dynamically (Opening + Income - Expense)
-            // Using fallback to 0 if openingBalance is missing
             let liveBalance = (acc.openingBalance !== undefined) ? acc.openingBalance : 0;
-            
             allTransactions.forEach(t => {
                 if (t.accountId === acc.id) {
                     if (t.type === 'income') liveBalance += t.amount;
@@ -72,20 +111,16 @@ function initializeExpenseTracking(userId) {
             option.value = acc.name;
             option.dataset.id = acc.id;
             option.dataset.balance = liveBalance;
-            
-            // Display: "SBI Bank (₹5000)"
             option.textContent = `${acc.name} (${currencySymbol}${liveBalance.toLocaleString()})`;
             accountSelect.appendChild(option);
         });
 
-        // Restore previous selection if it still exists
         if (currentVal) {
             const exists = Array.from(accountSelect.options).some(o => o.value === currentVal);
             if (exists) accountSelect.value = currentVal;
         }
     };
 
-    // Listen to Accounts & Transactions for Real-time Updates
     if (accountSelect) {
         accountsRef.orderBy('name').onSnapshot(snapshot => {
             allAccounts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -97,27 +132,22 @@ function initializeExpenseTracking(userId) {
         });
     }
 
-    // --- 2. SMART CATEGORY DROPDOWN (Fetches from DB) ---
+    // --- 2. SMART CATEGORY DROPDOWN ---
     const categorySelect = document.getElementById('category');
-    const typeSelect = document.getElementById('type'); // 'expense' or 'income' dropdown
+    const typeSelect = document.getElementById('type'); 
 
     const renderCategoryDropdown = () => {
         if (!categorySelect) return;
-
         const selectedType = typeSelect ? typeSelect.value : 'expense'; 
         const currentVal = categorySelect.value;
 
         categorySelect.innerHTML = '<option value="" disabled selected>Select Category</option>';
-        
-        // Filter categories based on selected type (Income/Expense)
         const filteredCats = allCategories.filter(cat => cat.type.toLowerCase() === selectedType.toLowerCase());
 
         if (filteredCats.length === 0) {
-            // Fallback default categories if user hasn't created any
             const defaultCategories = selectedType === 'income' 
                 ? ['Salary', 'Allowance', 'Bonus', 'Other'] 
-                : ['Food', 'Travel', 'Shopping', 'Bills', 'Health', 'Entertainment', 'Other'];
-            
+                : ['Food', 'Travel', 'Shopping', 'Bills', 'Health', 'Entertainment', 'Education', 'Grocery', 'Rent', 'Fuel', 'Other'];
             defaultCategories.forEach(catName => {
                 const option = document.createElement('option');
                 option.value = catName;
@@ -125,7 +155,6 @@ function initializeExpenseTracking(userId) {
                 categorySelect.appendChild(option);
             });
         } else {
-            // Use User's Custom Categories
             filteredCats.forEach(cat => {
                 const option = document.createElement('option');
                 option.value = cat.name;
@@ -133,8 +162,6 @@ function initializeExpenseTracking(userId) {
                 categorySelect.appendChild(option);
             });
         }
-
-        // Restore selection if valid
         if (currentVal) {
             const exists = Array.from(categorySelect.options).some(o => o.value === currentVal);
             if (exists) categorySelect.value = currentVal;
@@ -142,19 +169,14 @@ function initializeExpenseTracking(userId) {
     };
 
     if (categorySelect) {
-        // Fetch categories from Firestore
         categoriesRef.orderBy('name').onSnapshot(snapshot => {
             allCategories = snapshot.docs.map(doc => doc.data());
             renderCategoryDropdown();
         });
-
-        // Re-render dropdown when user switches between "Expense" and "Income"
-        if (typeSelect) {
-            typeSelect.addEventListener('change', renderCategoryDropdown);
-        }
+        if (typeSelect) typeSelect.addEventListener('change', renderCategoryDropdown);
     }
 
-    // --- 3. ADD TRANSACTION FORM SUBMISSION ---
+    // --- 3. ADD TRANSACTION FORM ---
     if (transactionForm) {
         transactionForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -181,7 +203,6 @@ function initializeExpenseTracking(userId) {
                 return;
             }
 
-            // UI Loading State
             const submitBtn = transactionForm.querySelector('button[type="submit"]');
             const originalBtnText = submitBtn.innerText;
             submitBtn.innerText = "Saving...";
@@ -189,8 +210,6 @@ function initializeExpenseTracking(userId) {
 
             try {
                 const batch = db.batch();
-
-                // A. Add Transaction
                 const newTxRef = transactionsRef.doc();
                 batch.set(newTxRef, {
                     type, amount, category, description, date,
@@ -198,35 +217,29 @@ function initializeExpenseTracking(userId) {
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                // B. Add Template (if checked)
                 if (saveAsTemplate) {
                     const newTempRef = templatesRef.doc();
                     batch.set(newTempRef, {
-                        type, amount, category, description,
-                        account: accountName,
+                        type, amount, category, description, account: accountName,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 }
 
                 await batch.commit();
 
-                // Reset Form
                 transactionForm.reset();
                 document.getElementById('save-template').checked = false;
                 document.getElementById('date').valueAsDate = new Date();
-                
-                // Trigger change to refresh categories based on default type
                 if (typeSelect) typeSelect.dispatchEvent(new Event('change'));
 
-                // Success Feedback
-                submitBtn.innerText = "Saved Successfully!";
-                submitBtn.classList.replace('bg-indigo-600', 'bg-green-600');
-                submitBtn.classList.replace('hover:bg-indigo-700', 'hover:bg-green-700');
+                if (navigator.vibrate) navigator.vibrate(50); // Haptic
 
+                submitBtn.innerText = "Saved!";
+                submitBtn.classList.replace('bg-indigo-600', 'bg-green-600');
+                
                 setTimeout(() => {
                     submitBtn.innerText = originalBtnText;
                     submitBtn.classList.replace('bg-green-600', 'bg-indigo-600');
-                    submitBtn.classList.replace('hover:bg-green-700', 'hover:bg-indigo-700');
                     submitBtn.disabled = false;
                 }, 2000);
 
@@ -239,55 +252,166 @@ function initializeExpenseTracking(userId) {
         });
     }
 
-    // --- 4. REAL-TIME LIST DISPLAY ---
+    // --- 4. REAL-TIME LIST (Refined UI) ---
     if (transactionList) {
-        // Show Skeleton Loading immediately
-        transactionList.innerHTML = getTransactionSkeleton() + getTransactionSkeleton() + getTransactionSkeleton();
+        transactionList.innerHTML = getTransactionSkeleton() + getTransactionSkeleton();
 
-        // Updated Sorting: Date first, then CreatedAt
-        transactionsRef.orderBy('date', 'desc').orderBy('createdAt', 'desc').limit(10).onSnapshot(snapshot => {
+        transactionsRef.orderBy('date', 'desc').orderBy('createdAt', 'desc').limit(20).onSnapshot(snapshot => {
             transactionList.innerHTML = '';
             
             if (snapshot.empty) {
-                transactionList.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center py-4">No transactions yet.</p>';
+                transactionList.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-8 text-gray-400">
+                        <i class="fas fa-receipt text-4xl mb-2 opacity-50"></i>
+                        <p class="text-sm">No transactions yet.</p>
+                    </div>`;
                 return;
             }
 
             const currencySymbol = getAppCurrency();
-
+            
+            // Group By Date
+            const groups = {};
             snapshot.forEach(doc => {
-                const t = doc.data();
-                const isIncome = t.type === 'income';
-                const colorClass = isIncome ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
-                const sign = isIncome ? '+' : '-';
-                const borderClass = isIncome ? 'border-green-500' : 'border-red-500';
-
-                const html = `
-                    <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border-l-4 ${borderClass} hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                        <div>
-                            <p class="font-bold text-gray-800 dark:text-gray-200">${t.description}</p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                <span class="bg-gray-200 dark:bg-gray-600 px-1.5 py-0.5 rounded text-gray-700 dark:text-gray-300">${t.category}</span>
-                                <span class="mx-1">•</span> ${t.account} <span class="mx-1">•</span> ${t.date}
-                            </p>
-                        </div>
-                        <p class="font-bold text-lg ${colorClass}">${sign} ${currencySymbol}${t.amount.toLocaleString()}</p>
-                    </div>`;
-                transactionList.innerHTML += html;
+                const data = doc.data();
+                const dateKey = data.date;
+                if (!groups[dateKey]) groups[dateKey] = [];
+                groups[dateKey].push({ id: doc.id, ...data });
             });
+
+            // Iterate Groups
+            Object.keys(groups).forEach(date => {
+                // FIXED: Increased z-index to 30 to stay above items
+                // FIXED: Added backdrop blur and solid color for better readability
+                const headerHtml = `
+                    <div class="sticky top-0 bg-[#EAE5E1] dark:bg-gray-900 z-30 py-2 mb-2 px-1 border-b border-gray-200 dark:border-gray-700/50 backdrop-blur-sm bg-opacity-95 dark:bg-opacity-95">
+                        <h4 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center">
+                            <i class="fas fa-calendar-day mr-2 text-[10px]"></i>
+                            ${formatDateHeader(date)}
+                        </h4>
+                    </div>
+                `;
+                transactionList.insertAdjacentHTML('beforeend', headerHtml);
+
+                // Items in this group
+                groups[date].forEach(t => {
+                    const isIncome = t.type === 'income';
+                    const amountColor = isIncome ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-white';
+                    const sign = isIncome ? '+' : '-';
+                    const iconClass = getCategoryIcon(t.category, t.type);
+                    const iconBg = isIncome ? 'bg-green-100 text-green-600 dark:bg-green-900/40 dark:text-green-400' : 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400';
+
+                    // FIXED: Used solid 'bg-white' and 'dark:bg-gray-800' to prevent see-through
+                    // FIXED: Added 'min-w-0' to flex items to enforce truncation
+                    const html = `
+                    <div class="swipe-item-wrapper mb-3" id="wrap-${t.id}">
+                        <div class="swipe-actions rounded-xl">
+                            <span class="text-white font-bold flex items-center"><i class="fas fa-trash-alt mr-2"></i>Delete</span>
+                        </div>
+                        <div class="swipe-content flex items-center p-3.5 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 relative z-10" id="item-${t.id}">
+                            
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center ${iconBg} mr-3.5 shrink-0 text-lg shadow-inner">
+                                <i class="fas ${iconClass}"></i>
+                            </div>
+
+                            <div class="flex-1 min-w-0 mr-3">
+                                <p class="font-bold text-gray-800 dark:text-gray-100 text-sm truncate leading-snug">${t.description}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate flex items-center">
+                                    <span class="truncate max-w-[100px]">${t.category}</span>
+                                    <span class="mx-1.5 opacity-30">|</span> 
+                                    <span class="truncate max-w-[100px]">${t.account}</span>
+                                </p>
+                            </div>
+
+                            <div class="text-right shrink-0">
+                                <p class="font-bold text-sm ${amountColor} whitespace-nowrap">${sign} ${currencySymbol}${t.amount.toLocaleString()}</p>
+                            </div>
+                        </div>
+                    </div>`;
+                    
+                    transactionList.insertAdjacentHTML('beforeend', html);
+                    
+                    // Attach Swipe Listeners
+                    const itemEl = document.getElementById(`item-${t.id}`);
+                    if (itemEl) addSwipeListeners(itemEl, t.id, t.description, transactionsRef);
+                });
+            });
+
         }, error => {
-             // Error handling for missing index
-             console.error("Error fetching recent transactions:", error);
-             if (error.message.includes('The query requires an index')) {
-                 const indexLink = error.message.match(/https:\/\/console\.firebase\.google\.com[^\s]*/)[0];
-                 transactionList.innerHTML = `
-                     <div class="text-center py-4">
-                         <p class="text-red-500 text-sm mb-2"><i class="fas fa-exclamation-triangle mr-1"></i> Setup Required</p>
-                         <a href="${indexLink}" target="_blank" class="text-indigo-600 dark:text-indigo-400 text-sm underline">Click to Create Index</a>
-                     </div>`;
-             } else {
-                 transactionList.innerHTML = '<p class="text-red-500 text-center py-4">Error loading data.</p>';
-             }
+             console.error("Error fetching transactions:", error);
+             transactionList.innerHTML = '<p class="text-red-500 text-center py-4 text-sm">Unable to load history.</p>';
         });
+    }
+}
+
+// --- SWIPE LOGIC HELPER ---
+function addSwipeListeners(element, docId, description, ref) {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let currentTranslate = 0;
+    let isSwiping = false;
+    const maxSwipe = -100; 
+
+    element.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+        touchStartY = e.changedTouches[0].screenY;
+        document.querySelectorAll('.swipe-content').forEach(el => {
+            if (el !== element) el.style.transform = 'translateX(0)';
+        });
+        element.classList.add('swiping'); 
+    }, { passive: true });
+
+    element.addEventListener('touchmove', (e) => {
+        const touchCurrentX = e.changedTouches[0].screenX;
+        const touchCurrentY = e.changedTouches[0].screenY;
+        const diffX = touchCurrentX - touchStartX;
+        const diffY = touchCurrentY - touchStartY;
+
+        if (Math.abs(diffY) > Math.abs(diffX)) return;
+
+        if (diffX < 0) {
+            isSwiping = true;
+            currentTranslate = Math.max(diffX, -150); 
+            element.style.transform = `translateX(${currentTranslate}px)`;
+        }
+    }, { passive: true });
+
+    element.addEventListener('touchend', (e) => {
+        element.classList.remove('swiping'); 
+        const touchEndX = e.changedTouches[0].screenX;
+        
+        if (currentTranslate < -60) {
+            element.style.transform = `translateX(${maxSwipe}px)`;
+            if (currentTranslate < -200) {
+                confirmDelete(docId, description, ref);
+            }
+        } else {
+            element.style.transform = 'translateX(0)';
+        }
+        
+        isSwiping = false;
+        currentTranslate = 0;
+    });
+    
+    const wrapper = document.getElementById(`wrap-${docId}`);
+    if(wrapper) {
+        const deleteBtn = wrapper.querySelector('.swipe-actions');
+        // Prevent multiple listeners
+        const newBtn = deleteBtn.cloneNode(true);
+        deleteBtn.parentNode.replaceChild(newBtn, deleteBtn);
+        
+        newBtn.addEventListener('click', () => {
+             confirmDelete(docId, description, ref);
+        });
+    }
+}
+
+function confirmDelete(docId, description, ref) {
+    if (navigator.vibrate) navigator.vibrate(50);
+    if (confirm(`Delete transaction "${description}"?`)) {
+        ref.doc(docId).delete().catch(err => alert("Error deleting"));
+    } else {
+        const el = document.getElementById(`item-${docId}`);
+        if(el) el.style.transform = 'translateX(0)';
     }
 }
