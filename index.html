@@ -2,16 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <title>FinTrack</title>
     
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#4F46E5"> 
+    <meta name="theme-color" content="#4F46E5">
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="FinTrack">
     <link rel="apple-touch-icon" href="assets/img/icon-192.png">
+    <meta name="format-detection" content="telephone=no">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -30,137 +30,93 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
     <script src='https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js'></script>
-
     <link rel="stylesheet" href="assets/css/style.css">
     
     <style>
-        /* Calculator Grid */
+        /* Base Styles */
         .calculator { display: none; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
         .calculator.active { display: grid; }
         .calc-btn { transition: background-color 0.2s; }
-        
-        /* Hide Scrollbar for Template List */
         #template-list::-webkit-scrollbar { display: none; }
         #template-list { -ms-overflow-style: none;  scrollbar-width: none; }
-        
-        /* Safe Area for Mobile Nav */
         .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
-        
-        /* Scanning Animation */
         .scan-line {
-            position: absolute;
-            width: 100%;
-            height: 2px;
-            background: #4F46E5;
-            animation: scan 2s infinite;
-            top: 0;
-            z-index: 10;
+            position: absolute; width: 100%; height: 2px; background: #4F46E5;
+            animation: scan 2s infinite; top: 0; z-index: 10;
         }
-        @keyframes scan {
-            0% { top: 0; }
-            50% { top: 100%; }
-            100% { top: 0; }
-        }
+        @keyframes scan { 0% { top: 0; } 50% { top: 100%; } 100% { top: 0; } }
+
+        /* PWA Fixes */
+        html, body { height: 100%; overscroll-behavior-y: none; }
+        .pwa-standalone #install-btn { display: none !important; }
+        .pwa-standalone main { padding-top: env(safe-area-inset-top) !important; }
     </style>
 </head>
-<body class="font-sans bg-[#EAE5E1] dark:bg-gray-900 transition-colors duration-200">
+<body class="font-sans bg-[#EAE5E1] dark:bg-gray-900 transition-colors duration-200 select-none">
 
     <div class="relative min-h-screen md:flex">
         
-        <div class="md:hidden fixed w-full top-0 left-0 z-50 flex justify-between items-center bg-indigo-600 dark:bg-gray-900 text-white p-4 shadow-lg transition-colors duration-200">
-            <h1 class="text-lg font-bold flex items-center">
-                <i class="fas fa-wallet mr-2 text-white/90"></i>FinTrack
-            </h1>
-            <div class="flex items-center gap-3">
-                <button id="install-btn" class="hidden bg-white text-indigo-600 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide hover:bg-gray-100 transition shadow-sm">
-                    <i class="fas fa-download mr-1"></i> Install
-                </button>
-                <button id="menu-button" class="focus:outline-none p-2 rounded hover:bg-indigo-700 dark:hover:bg-gray-800 transition-colors">
-                    <i class="fas fa-bars text-xl"></i>
-                </button>
-            </div>
-        </div>
+        <div id="sidebar-backdrop" class="fixed inset-0 bg-black/50 z-[55] hidden md:hidden transition-opacity" onclick="closeSidebarMenu()"></div>
 
-        <aside id="sidebar" class="w-64 bg-gray-800 text-white flex-col fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-2xl">
-            <div class="p-4 border-b border-gray-700 hidden md:block">
+        <aside id="sidebar" class="w-64 bg-gray-800 text-white flex-col fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-[60] shadow-2xl h-full">
+            <div class="p-4 border-b border-gray-700 flex justify-between items-center">
                 <h1 class="text-xl font-bold"><i class="fas fa-wallet mr-2"></i>FinTrack</h1>
+                <button onclick="closeSidebarMenu()" class="md:hidden text-gray-400 hover:text-white focus:outline-none p-2">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
             </div>
             
             <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-                <a href="index.html" class="flex items-center px-4 py-3 text-gray-100 bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-chart-pie mr-3 w-5"></i><span data-i18n="nav_dashboard">Dashboard</span>
-                </a>
-                <a href="calendar.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-calendar-alt mr-3 w-5"></i><span data-i18n="nav_calendar">Calendar</span>
-                </a>
-                <a href="analysis.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-chart-line mr-3 w-5"></i><span data-i18n="nav_analysis">Analysis</span>
-                </a>
-                <a href="accounts.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-university mr-3 w-5"></i><span data-i18n="nav_accounts">Accounts</span>
-                </a>
-                <a href="recurring.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-sync-alt mr-3 w-5"></i><span data-i18n="nav_recurring">Subscriptions</span>
-                </a>
-                <a href="categories.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-tags mr-3 w-5"></i><span data-i18n="nav_categories">Categories</span>
-                </a>
-                <a href="goals.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-bullseye mr-3 w-5"></i><span data-i18n="nav_goals">Goals</span>
-                </a>
-                <a href="debt.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-hand-holding-usd mr-3 w-5"></i><span data-i18n="nav_debts">Debts</span>
-                </a>
-                <a href="split-bill.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-users mr-3 w-5"></i><span data-i18n="nav_split">Split Bill</span>
-                </a>
-                <a href="history.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-history mr-3 w-5"></i><span data-i18n="nav_history">History</span>
-                </a>
-                <a href="profile.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-user-circle mr-3 w-5"></i><span data-i18n="nav_profile">Profile</span>
-                </a>
-                <a href="settings.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-cog mr-3 w-5"></i><span data-i18n="nav_settings">Settings</span>
-                </a>
+                <a href="index.html" class="flex items-center px-4 py-3 text-gray-100 bg-gray-700 rounded-md transition-colors"><i class="fas fa-chart-pie mr-3 w-5"></i><span data-i18n="nav_dashboard">Dashboard</span></a>
+                <a href="calendar.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-calendar-alt mr-3 w-5"></i><span data-i18n="nav_calendar">Calendar</span></a>
+                <a href="analysis.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-chart-line mr-3 w-5"></i><span data-i18n="nav_analysis">Analysis</span></a>
+                <a href="accounts.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-university mr-3 w-5"></i><span data-i18n="nav_accounts">Accounts</span></a>
+                <a href="recurring.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-sync-alt mr-3 w-5"></i><span data-i18n="nav_recurring">Subscriptions</span></a>
+                <a href="categories.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-tags mr-3 w-5"></i><span data-i18n="nav_categories">Categories</span></a>
+                <a href="goals.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-bullseye mr-3 w-5"></i><span data-i18n="nav_goals">Goals</span></a>
+                <a href="debt.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-hand-holding-usd mr-3 w-5"></i><span data-i18n="nav_debts">Debts</span></a>
+                <a href="split-bill.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-users mr-3 w-5"></i><span data-i18n="nav_split">Split Bill</span></a>
+                <a href="history.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-history mr-3 w-5"></i><span data-i18n="nav_history">History</span></a>
+                <a href="profile.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-user-circle mr-3 w-5"></i><span data-i18n="nav_profile">Profile</span></a>
+                <a href="settings.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors"><i class="fas fa-cog mr-3 w-5"></i><span data-i18n="nav_settings">Settings</span></a>
             </nav>
-
             <div class="p-4 border-t border-gray-700">
-                <button id="logout-button" class="w-full flex items-center justify-center px-4 py-2 text-gray-300 hover:bg-red-600 rounded-md transition-colors">
-                    <i class="fas fa-sign-out-alt mr-3"></i><span data-i18n="nav_logout">Logout</span>
-                </button>
+                <button id="logout-button" class="w-full flex items-center justify-center px-4 py-2 text-gray-300 hover:bg-red-600 rounded-md transition-colors"><i class="fas fa-sign-out-alt mr-3"></i><span data-i18n="nav_logout">Logout</span></button>
             </div>
         </aside>
 
-        <main class="flex-1 p-4 pt-20 pb-24 md:p-10 md:pt-10 overflow-y-auto h-screen">
-            <header class="mb-6 md:mb-8">
-                <h2 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white" data-i18n="welcome_back">Welcome Back!</h2>
-                <p id="user-greeting" class="text-sm md:text-base text-gray-500 dark:text-gray-400">Here's your financial summary.</p>
+        <main class="flex-1 p-4 pb-24 md:p-10 md:pt-10 overflow-y-auto min-h-screen relative z-10">
+            
+            <header class="flex justify-between items-start mb-6 pt-2">
+                <div>
+                    <h2 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white" data-i18n="welcome_back">Welcome Back!</h2>
+                    <p id="user-greeting" class="text-sm md:text-base text-gray-500 dark:text-gray-400">Here's your financial summary.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button id="install-btn" class="hidden bg-indigo-600 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-md hover:bg-indigo-700 transition">
+                        <i class="fas fa-download mr-1"></i> Install
+                    </button>
+                    <button onclick="openSidebarMenu()" class="md:hidden bg-white dark:bg-gray-800 p-2.5 rounded-full shadow-md text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition focus:outline-none active:scale-95">
+                        <i class="fas fa-bars text-lg"></i>
+                    </button>
+                </div>
             </header>
             
             <div id="budget-alert" class="hidden p-4 mb-6 rounded-lg border shadow-sm" role="alert"></div>
 
             <section class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                
-                <div class="lg:col-span-2 bg-white dark:bg-gray-800 p-5 md:p-6 rounded-lg shadow-md transition-colors duration-200 h-fit">
+                <div class="lg:col-span-2 bg-white dark:bg-gray-800 p-5 rounded-lg shadow-md transition-colors duration-200">
                     <div class="flex justify-between items-center mb-3">
-                        <h3 class="text-xl font-bold text-gray-800 dark:text-white" data-i18n="add_transaction">Add Transaction</h3>
+                        <h3 class="text-lg font-bold text-gray-800 dark:text-white" data-i18n="add_transaction">Add Transaction</h3>
                         <div class="flex space-x-2">
-                            <button id="scan-btn" title="Scan Receipt" class="p-2 w-10 h-10 rounded-full text-indigo-600 bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 transition-colors focus:outline-none">
-                                <i class="fas fa-camera"></i>
-                            </button>
-                            <button id="voice-input-btn" title="Add by voice" class="p-2 w-10 h-10 rounded-full text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 transition-colors focus:outline-none">
-                                <i class="fas fa-microphone"></i>
-                            </button>
+                            <button id="scan-btn" class="p-2 w-9 h-9 rounded-full text-indigo-600 bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400"><i class="fas fa-camera"></i></button>
+                            <button id="voice-input-btn" class="p-2 w-9 h-9 rounded-full text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-700"><i class="fas fa-microphone"></i></button>
                         </div>
                     </div>
 
                     <input type="file" id="scan-input" accept="image/*" capture="environment" class="hidden">
-
                     <div class="mb-5">
-                        <p class="text-[10px] text-gray-400 dark:text-gray-500 mb-2 font-bold uppercase tracking-wider" data-i18n="quick_fill">Quick Fill</p>
                         <div id="template-list" class="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
                             <p class="text-xs text-gray-400 italic">Loading...</p>
                         </div>
@@ -168,101 +124,74 @@
 
                     <form id="transaction-form" class="space-y-4">
                         <div>
-                            <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1" data-i18n="lbl_account">Account</label>
-                            <select id="account" name="account" required class="block w-full py-2.5 px-3 border border-gray-300 bg-white rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-                                <option value="" disabled selected>Loading...</option>
-                            </select>
+                            <select id="account" name="account" required class="block w-full py-2.5 px-3 border border-gray-300 bg-white rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"><option value="" disabled selected>Loading...</option></select>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1" data-i18n="lbl_type">Type</label>
-                                <select id="type" name="type" class="block w-full py-2.5 px-3 border border-gray-300 bg-white rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-                                    <option value="expense">Expense</option>
-                                    <option value="income">Income</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1" data-i18n="lbl_category">Category</label>
-                                <select id="category" name="category" required class="block w-full py-2.5 px-3 border border-gray-300 bg-white rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-                                </select>
-                            </div>
+                            <select id="type" name="type" class="block w-full py-2.5 px-3 border border-gray-300 bg-white rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"><option value="expense">Expense</option><option value="income">Income</option></select>
+                            <select id="category" name="category" required class="block w-full py-2.5 px-3 border border-gray-300 bg-white rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm"></select>
                         </div>
-                        
                         <div class="relative">
-                            <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1" data-i18n="lbl_amount">Amount (₹)</label>
                             <div class="flex items-center">
-                                <input type="text" id="amount" name="amount" inputmode="decimal" required class="w-full py-2.5 px-3 border border-gray-300 rounded-l-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="0.00">
-                                <button type="button" id="calc-toggle-btn" class="px-4 py-2.5 border border-l-0 border-gray-300 bg-gray-50 rounded-r-md text-gray-600 hover:bg-gray-100 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200 dark:hover:bg-gray-500 transition-colors">
-                                    <i class="fas fa-calculator"></i>
-                                </button>
+                                <input type="text" id="amount" name="amount" inputmode="decimal" required class="w-full py-2.5 px-3 border border-gray-300 rounded-l-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm" placeholder="0.00">
+                                <button type="button" id="calc-toggle-btn" class="px-4 py-2.5 border border-l-0 border-gray-300 bg-gray-50 rounded-r-md text-gray-600 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200"><i class="fas fa-calculator"></i></button>
                             </div>
-                            
-                            <div id="calculator" class="calculator absolute z-20 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl p-2 mt-1 transition-colors duration-200">
-                                <button type="button" class="calc-btn py-3 bg-gray-100 rounded hover:bg-gray-200 dark:bg-gray-700 dark:text-white">7</button>
-                                <button type="button" class="calc-btn py-3 bg-gray-100 rounded hover:bg-gray-200 dark:bg-gray-700 dark:text-white">8</button>
-                                <button type="button" class="calc-btn py-3 bg-gray-100 rounded hover:bg-gray-200 dark:bg-gray-700 dark:text-white">9</button>
-                                <button type="button" class="calc-btn py-3 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-300">/</button>
-                                <button type="button" class="calc-btn py-3 bg-gray-100 rounded hover:bg-gray-200 dark:bg-gray-700 dark:text-white">4</button>
-                                <button type="button" class="calc-btn py-3 bg-gray-100 rounded hover:bg-gray-200 dark:bg-gray-700 dark:text-white">5</button>
-                                <button type="button" class="calc-btn py-3 bg-gray-100 rounded hover:bg-gray-200 dark:bg-gray-700 dark:text-white">6</button>
-                                <button type="button" class="calc-btn py-3 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-300">*</button>
-                                <button type="button" class="calc-btn py-3 bg-gray-100 rounded hover:bg-gray-200 dark:bg-gray-700 dark:text-white">1</button>
-                                <button type="button" class="calc-btn py-3 bg-gray-100 rounded hover:bg-gray-200 dark:bg-gray-700 dark:text-white">2</button>
-                                <button type="button" class="calc-btn py-3 bg-gray-100 rounded hover:bg-gray-200 dark:bg-gray-700 dark:text-white">3</button>
-                                <button type="button" class="calc-btn py-3 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-300">-</button>
-                                <button type="button" class="calc-btn py-3 bg-gray-100 rounded hover:bg-gray-200 dark:bg-gray-700 dark:text-white">0</button>
-                                <button type="button" class="calc-btn py-3 bg-gray-100 rounded hover:bg-gray-200 dark:bg-gray-700 dark:text-white">.</button>
-                                <button type="button" class="calc-btn py-3 bg-red-100 text-red-600 rounded hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300">C</button>
-                                <button type="button" class="calc-btn py-3 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-300">+</button>
-                                <button type="button" id="calc-equals" class="col-span-4 calc-btn py-3 bg-indigo-600 text-white rounded hover:bg-indigo-700 shadow-md">=</button>
+                            <div id="calculator" class="calculator absolute z-20 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl p-2 mt-1">
+                                <button type="button" class="calc-btn py-3 bg-gray-100 rounded dark:bg-gray-700 dark:text-white">7</button>
+                                <button type="button" class="calc-btn py-3 bg-gray-100 rounded dark:bg-gray-700 dark:text-white">8</button>
+                                <button type="button" class="calc-btn py-3 bg-gray-100 rounded dark:bg-gray-700 dark:text-white">9</button>
+                                <button type="button" class="calc-btn py-3 bg-indigo-100 text-indigo-700 rounded dark:bg-indigo-900/50 dark:text-indigo-300">/</button>
+                                <button type="button" class="calc-btn py-3 bg-gray-100 rounded dark:bg-gray-700 dark:text-white">4</button>
+                                <button type="button" class="calc-btn py-3 bg-gray-100 rounded dark:bg-gray-700 dark:text-white">5</button>
+                                <button type="button" class="calc-btn py-3 bg-gray-100 rounded dark:bg-gray-700 dark:text-white">6</button>
+                                <button type="button" class="calc-btn py-3 bg-indigo-100 text-indigo-700 rounded dark:bg-indigo-900/50 dark:text-indigo-300">*</button>
+                                <button type="button" class="calc-btn py-3 bg-gray-100 rounded dark:bg-gray-700 dark:text-white">1</button>
+                                <button type="button" class="calc-btn py-3 bg-gray-100 rounded dark:bg-gray-700 dark:text-white">2</button>
+                                <button type="button" class="calc-btn py-3 bg-gray-100 rounded dark:bg-gray-700 dark:text-white">3</button>
+                                <button type="button" class="calc-btn py-3 bg-indigo-100 text-indigo-700 rounded dark:bg-indigo-900/50 dark:text-indigo-300">-</button>
+                                <button type="button" class="calc-btn py-3 bg-gray-100 rounded dark:bg-gray-700 dark:text-white">0</button>
+                                <button type="button" class="calc-btn py-3 bg-gray-100 rounded dark:bg-gray-700 dark:text-white">.</button>
+                                <button type="button" class="calc-btn py-3 bg-red-100 text-red-600 rounded dark:bg-red-900/30 dark:text-red-300">C</button>
+                                <button type="button" class="calc-btn py-3 bg-indigo-100 text-indigo-700 rounded dark:bg-indigo-900/50 dark:text-indigo-300">+</button>
+                                <button type="button" id="calc-equals" class="col-span-4 calc-btn py-3 bg-indigo-600 text-white rounded shadow-md">=</button>
                             </div>
                         </div>
 
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1" data-i18n="lbl_description">Description</label>
-                            <input type="text" id="description" name="description" required class="mt-1 block w-full py-2.5 px-3 border border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="e.g., Netflix">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1" data-i18n="lbl_date">Date</label>
-                            <input type="date" id="date" name="date" required class="mt-1 block w-full py-2.5 px-3 border border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-                        </div>
+                        <input type="text" id="description" name="description" required class="mt-1 block w-full py-2.5 px-3 border border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm" placeholder="e.g., Netflix">
+                        <input type="date" id="date" name="date" required class="mt-1 block w-full py-2.5 px-3 border border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white text-sm">
 
                         <div class="flex items-center py-1">
-                            <input id="save-template" name="save-template" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600 cursor-pointer">
-                            <label for="save-template" class="ml-2 block text-sm text-gray-700 dark:text-gray-300 cursor-pointer" data-i18n="lbl_save_template">
-                                Save as Template
-                            </label>
+                            <input id="save-template" name="save-template" type="checkbox" class="h-4 w-4 text-indigo-600 rounded">
+                            <label for="save-template" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">Save as Template</label>
                         </div>
-
-                        <button type="submit" class="w-full bg-indigo-600 text-white py-3 px-4 rounded-md hover:bg-indigo-700 transition-colors font-medium shadow-md" data-i18n="btn_add_transaction">Add Transaction</button>
+                        <button type="submit" class="w-full bg-indigo-600 text-white py-3 px-4 rounded-md hover:bg-indigo-700 transition font-medium shadow-md">Add Transaction</button>
                     </form>
                 </div>
                 
                 <div class="lg:col-span-3 space-y-6">
-                    <section class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-                        <div class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-md border-l-4 border-green-500 transition-colors duration-200">
-                            <h3 class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider" data-i18n="lbl_income">Total Income</h3>
+                    <section class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        <div class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-md border-l-4 border-green-500">
+                            <h3 class="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Total Income</h3>
                             <p id="total-income" class="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">₹0.00</p>
                         </div>
-                        <div class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-md border-l-4 border-red-500 transition-colors duration-200">
-                            <h3 class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider" data-i18n="lbl_expense">Total Expense</h3>
+                        <div class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-md border-l-4 border-red-500">
+                            <h3 class="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Total Expense</h3>
                             <p id="total-expense" class="text-2xl font-bold text-red-600 dark:text-red-400 mt-1">₹0.00</p>
                         </div>
-                        <div class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-md border-l-4 border-blue-500 transition-colors duration-200 sm:col-span-2 md:col-span-1">
-                            <h3 class="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-wider" data-i18n="lbl_balance">Balance</h3>
+                        <div class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-md border-l-4 border-blue-500 sm:col-span-2 md:col-span-1">
+                            <h3 class="text-xs font-bold uppercase text-gray-500 dark:text-gray-400">Balance</h3>
                             <p id="balance" class="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-1">₹0.00</p>
                         </div>
                     </section>
                     
-                    <section class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-md transition-colors duration-200">
-                        <h3 class="text-lg font-bold mb-4 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-2" data-i18n="title_recent">Recent Transactions</h3>
+                    <section class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-md">
+                        <h3 class="text-lg font-bold mb-4 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-2">Recent Transactions</h3>
                         <div id="transaction-list" class="space-y-3 max-h-80 overflow-y-auto custom-scrollbar pr-1">
-                            <p class="text-gray-500 dark:text-gray-400 text-sm">Loading...</p>
+                            <p class="text-gray-500 text-sm">Loading...</p>
                         </div>
                     </section>
                     
-                    <section class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-md transition-colors duration-200">
-                        <h3 class="text-lg font-bold mb-4 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-2" data-i18n="title_breakdown">Expense Breakdown</h3>
+                    <section class="bg-white dark:bg-gray-800 p-5 rounded-lg shadow-md">
+                        <h3 class="text-lg font-bold mb-4 text-gray-800 dark:text-white border-b dark:border-gray-700 pb-2">Expense Breakdown</h3>
                         <div style="height: 250px; width: 100%; display: flex; justify-content: center;">
                             <canvas id="expense-pie-chart"></canvas>
                         </div>
@@ -279,139 +208,109 @@
     <div id="scan-modal" class="fixed inset-0 z-[60] bg-black bg-opacity-90 hidden flex flex-col items-center justify-center p-4">
         <div class="relative w-full max-w-sm bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-2xl">
             <div class="p-4 bg-gray-100 dark:bg-gray-900 border-b dark:border-gray-700 flex justify-between items-center">
-                <h3 class="font-bold text-gray-800 dark:text-white"><i class="fas fa-camera mr-2"></i>Scanning Receipt...</h3>
+                <h3 class="font-bold text-gray-800 dark:text-white">Scanning...</h3>
                 <button id="close-scan" class="text-gray-500 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
             </div>
             <div class="relative h-64 bg-black flex items-center justify-center overflow-hidden">
                 <img id="scan-preview" class="max-h-full max-w-full object-contain" />
                 <div id="scan-anim" class="scan-line hidden"></div>
-                <div id="scan-loader" class="absolute text-white text-center hidden">
-                    <i class="fas fa-spinner fa-spin text-3xl mb-2"></i>
-                    <p class="text-sm">Processing...</p>
-                </div>
+                <div id="scan-loader" class="absolute text-white text-center hidden"><i class="fas fa-spinner fa-spin text-3xl mb-2"></i><p class="text-sm">Processing...</p></div>
             </div>
-            <div class="p-4 text-center">
-                <p id="scan-status" class="text-xs text-gray-500 dark:text-gray-400">Analysing text...</p>
-            </div>
+            <div class="p-4 text-center"><p id="scan-status" class="text-xs text-gray-500">Analysing text...</p></div>
         </div>
     </div>
 
     <div class="md:hidden fixed bottom-0 w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex justify-around items-center p-3 z-50 shadow-lg pb-safe">
-        <a href="index.html" class="flex flex-col items-center text-indigo-600 dark:text-indigo-400">
-            <i class="fas fa-home text-lg"></i>
-            <span class="text-[10px] font-medium mt-1" data-i18n="nav_dashboard">Home</span>
-        </a>
-        <a href="analysis.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-            <i class="fas fa-chart-pie text-lg"></i>
-            <span class="text-[10px] font-medium mt-1" data-i18n="nav_analysis">Analysis</span>
-        </a>
-        <div class="relative -top-6">
-            <a href="#transaction-form" onclick="document.getElementById('transaction-form').scrollIntoView({behavior: 'smooth'})" class="flex items-center justify-center w-14 h-14 bg-indigo-600 rounded-full text-white shadow-lg border-4 border-[#EAE5E1] dark:border-gray-900">
-                <i class="fas fa-plus text-xl"></i>
-            </a>
-        </div>
-        <a href="history.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-            <i class="fas fa-history text-lg"></i>
-            <span class="text-[10px] font-medium mt-1" data-i18n="nav_history">History</span>
-        </a>
-        <a href="settings.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-            <i class="fas fa-cog text-lg"></i>
-            <span class="text-[10px] font-medium mt-1" data-i18n="nav_settings">Settings</span>
-        </a>
+        <a href="index.html" class="flex flex-col items-center text-indigo-600 dark:text-indigo-400"><i class="fas fa-home text-lg"></i><span class="text-[10px] font-medium mt-1">Home</span></a>
+        <a href="analysis.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"><i class="fas fa-chart-pie text-lg"></i><span class="text-[10px] font-medium mt-1">Analysis</span></a>
+        <div class="relative -top-6"><a href="#transaction-form" onclick="document.getElementById('transaction-form').scrollIntoView({behavior: 'smooth'})" class="flex items-center justify-center w-14 h-14 bg-indigo-600 rounded-full text-white shadow-lg border-4 border-[#EAE5E1] dark:border-gray-900"><i class="fas fa-plus text-xl"></i></a></div>
+        <a href="history.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"><i class="fas fa-history text-lg"></i><span class="text-[10px] font-medium mt-1">History</span></a>
+        <a href="settings.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"><i class="fas fa-cog text-lg"></i><span class="text-[10px] font-medium mt-1">Settings</span></a>
     </div>
     
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const amountInput = document.getElementById('amount'); 
-            const calcToggleBtn = document.getElementById('calc-toggle-btn'); 
-            const calculator = document.getElementById('calculator'); 
-            let currentExpression = '';
-            
-            calcToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); calculator.classList.toggle('active'); });
-            
-            calculator.addEventListener('click', (e) => {
-                e.stopPropagation(); 
-                const btn = e.target; 
-                if (!btn.classList.contains('calc-btn')) return; 
-                const value = btn.textContent;
-                
-                if (value === '=') { 
-                    try { 
-                        const result = Function('"use strict";return (' + currentExpression + ')')(); 
-                        amountInput.value = result; 
-                        currentExpression = ''; 
-                        calculator.classList.remove('active'); 
-                    } catch { 
-                        amountInput.value = 'Error'; 
-                        currentExpression = ''; 
-                    } 
-                } else if (value === 'C') { 
-                    currentExpression = ''; 
-                    amountInput.value = ''; 
-                } else { 
-                    currentExpression += value; 
-                    amountInput.value = currentExpression; 
-                }
-            });
-            
-            document.addEventListener('click', (e) => { 
-                if (!calculator.contains(e.target) && !calcToggleBtn.contains(e.target)) { 
-                    calculator.classList.remove('active'); 
-                } 
-            });
-            
-            // Set Today's Date
-            document.getElementById('date').valueAsDate = new Date();
-        });
-
-        // PWA Installation Logic
-        let deferredPrompt;
-        const installBtn = document.getElementById('install-btn');
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('service-worker.js')
-                    .then(reg => console.log('Service Worker registered', reg))
-                    .catch(err => console.log('Service Worker failed', err));
-            });
+        // 1. GLOBAL FUNCTION DEFINITIONS (Must be first)
+        function openSidebarMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            sidebar.classList.remove('-translate-x-full');
+            backdrop.classList.remove('hidden');
+            setTimeout(() => backdrop.classList.remove('opacity-0'), 10);
         }
 
-        window.addEventListener('beforeinstallprompt', (e) => {
-            console.log('beforeinstallprompt fired');
-            e.preventDefault();
-            deferredPrompt = e;
-            // Show the install button
-            if(installBtn) installBtn.classList.remove('hidden');
+        function closeSidebarMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            sidebar.classList.add('-translate-x-full');
+            backdrop.classList.add('opacity-0');
+            setTimeout(() => backdrop.classList.add('hidden'), 300);
+        }
+
+        function isStandalone() {
+            return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        }
+
+        // 2. DOM CONTENT LOADED
+        document.addEventListener('DOMContentLoaded', () => {
+            if (isStandalone()) {
+                document.body.classList.add('pwa-standalone');
+            }
+
+            // Calculator Logic
+            const calcToggleBtn = document.getElementById('calc-toggle-btn'); 
+            const calculator = document.getElementById('calculator'); 
+            const amountInput = document.getElementById('amount');
+            let currentExpression = '';
+            
+            if(calcToggleBtn && calculator && amountInput) {
+                calcToggleBtn.addEventListener('click', (e) => { e.stopPropagation(); calculator.classList.toggle('active'); });
+                
+                calculator.addEventListener('click', (e) => {
+                    e.stopPropagation(); const btn = e.target; 
+                    if (!btn.classList.contains('calc-btn')) return; 
+                    const value = btn.textContent;
+                    if (value === '=') { try { amountInput.value = Function('"use strict";return (' + currentExpression + ')')(); currentExpression = ''; calculator.classList.remove('active'); } catch { amountInput.value = 'Error'; currentExpression = ''; } } 
+                    else if (value === 'C') { currentExpression = ''; amountInput.value = ''; } 
+                    else { currentExpression += value; amountInput.value = currentExpression; }
+                });
+                
+                document.addEventListener('click', (e) => { if (!calculator.contains(e.target) && !calcToggleBtn.contains(e.target)) calculator.classList.remove('active'); });
+            }
+
+            // Date
+            const dateInput = document.getElementById('date');
+            if(dateInput) dateInput.valueAsDate = new Date();
         });
 
+        // Install Button Logic
+        let deferredPrompt;
+        const installBtn = document.getElementById('install-btn');
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            if(!isStandalone() && installBtn) installBtn.classList.remove('hidden');
+        });
         if(installBtn) {
             installBtn.addEventListener('click', () => {
-                // Hide button
                 installBtn.classList.add('hidden');
-                // Show prompt
                 if(deferredPrompt) {
                     deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then((choiceResult) => {
-                        if (choiceResult.outcome === 'accepted') {
-                            console.log('User accepted the install prompt');
-                        } else {
-                            console.log('User dismissed the install prompt');
-                        }
-                        deferredPrompt = null;
-                    });
+                    deferredPrompt.userChoice.then((result) => deferredPrompt = null);
                 }
             });
+        }
+        
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => navigator.serviceWorker.register('service-worker.js'));
         }
     </script>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-    
     <script src="assets/js/firebase.js"></script>
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/main.js"></script>
-    
     <script src="assets/js/expense.js"></script>
     <script src="assets/js/charts.js"></script>
     <script src="assets/js/voice.js"></script>
@@ -419,7 +318,6 @@
     <script src="assets/js/templates.js"></script>
     <script src="assets/js/budget.js"></script>
     <script src="assets/js/recurring.js"></script>
-    
     <script src="assets/js/security.js"></script>
     <script src="assets/js/notifications.js"></script>
     <script src="assets/js/scan.js"></script>

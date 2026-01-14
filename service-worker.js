@@ -1,60 +1,70 @@
-const CACHE_NAME = 'expense-manager-v1';
-const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/analysis.html',
-  '/history.html',
-  '/settings.html',
-  '/calendar.html',
-  '/recurring.html',
-  '/assets/css/style.css',
-  '/assets/js/main.js',
-  '/assets/js/expense.js',
-  '/assets/js/charts.js',
-  '/assets/js/theme.js',
-  '/assets/js/firebase.js',
-  '/assets/js/auth.js',
+const CACHE_NAME = 'fintrack-v2'; // 🔥 CHANGED VERSION as requested
+const urlsToCache = [
+  './',
+  './index.html',
+  './analysis.html',
+  './history.html',
+  './accounts.html',
+  './categories.html',
+  './settings.html',
+  './goals.html',
+  './debt.html',
+  './split-bill.html',
+  './profile.html',
+  './calendar.html',
+  './recurring.html',
+  './manifest.json',
+  './assets/css/style.css',
+  './assets/js/main.js',
+  './assets/js/auth.js',
+  './assets/js/firebase.js',
+  './assets/js/expense.js',
+  './assets/js/charts.js',
+  './assets/js/theme.js',
+  './assets/img/icon-192.png',
+  './assets/img/icon-512.png',
   'https://cdn.tailwindcss.com',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css'
 ];
 
-// 1. Install Event (Cache Files)
-self.addEventListener('install', (event) => {
+// Install Event
+self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('[Service Worker] Caching all assets');
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('Opened cache');
+        return cache.addAll(urlsToCache);
+      })
   );
+  self.skipWaiting(); // Force new SW to take over immediately
 });
 
-// 2. Activate Event (Clean old caches)
-self.addEventListener('activate', (event) => {
+// Activate Event (Cleanup Old Caches)
+self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then((keyList) => {
+    caches.keys().then(cacheNames => {
       return Promise.all(
-        keyList.map((key) => {
-          if (key !== CACHE_NAME) {
-            console.log('[Service Worker] Removing old cache', key);
-            return caches.delete(key);
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('Deleting old cache:', cacheName);
+            return caches.delete(cacheName);
           }
         })
       );
     })
   );
+  return self.clients.claim();
 });
 
-// 3. Fetch Event (Network First, Fallback to Cache)
-self.addEventListener('fetch', (event) => {
-  // Firestore/Firebase requests ko cache mat karo (Realtime data chahiye)
-  if (event.request.url.includes('firestore.googleapis.com') || event.request.url.includes('firebase')) {
-      return; 
-  }
-
+// Fetch Event
+self.addEventListener('fetch', event => {
   event.respondWith(
-    fetch(event.request)
-      .catch(() => {
-        return caches.match(event.request);
+    caches.match(event.request)
+      .then(response => {
+        if (response) {
+          return response;
+        }
+        return fetch(event.request);
       })
   );
 });
