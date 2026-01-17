@@ -1,36 +1,21 @@
-/* Custom Scrollbar for lists */
-.custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
+/* --- FONTS --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
+
+/* --- BASE SETTINGS --- */
+body {
+    font-family: 'Inter', sans-serif;
+    -webkit-tap-highlight-color: transparent; /* Remove blue highlight on mobile tap */
+    overscroll-behavior-y: none; /* Prevent pull-to-refresh on body in PWA */
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.05);
-    border-radius: 4px;
+/* Monospace font for numbers (Better readability for currency) */
+.font-mono-num {
+    font-family: 'Space Grotesk', monospace;
 }
 
-.dark .custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-}
+/* --- CUSTOM SCROLLBARS --- */
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
-}
-
-.dark .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.3);
-}
-
-/* Smooth Sidebar Transition */
-#sidebar {
-    transition: transform 0.3s ease-in-out;
-}
-
-/* Hide scrollbar utility */
+/* Hide Scrollbar (for horizontal chips) */
 .scrollbar-hide::-webkit-scrollbar {
     display: none;
 }
@@ -39,124 +24,165 @@
     scrollbar-width: none;
 }
 
-/* -----------------------------------------------------------
-   PHASE 1: SKELETON LOADING ANIMATION
-   ----------------------------------------------------------- */
-.skeleton {
-    background: #e1e4e8;
-    background-image: linear-gradient(
-        to right,
-        #e1e4e8 0%,
-        #edf1f5 20%,
-        #e1e4e8 40%,
-        #e1e4e8 100%
-    );
-    background-repeat: no-repeat;
-    background-size: 800px 104px;
-    display: inline-block;
-    position: relative;
-    animation-duration: 1.5s;
-    animation-fill-mode: forwards;
-    animation-iteration-count: infinite;
-    animation-name: shimmer;
-    animation-timing-function: linear;
-    border-radius: 4px;
+/* Stylish Thin Scrollbar (for vertical lists) */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1; /* Light mode thumb */
+    border-radius: 10px;
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #334155; /* Dark mode thumb */
 }
 
-.dark .skeleton {
-    background: #374151;
-    background-image: linear-gradient(
-        to right,
-        #374151 0%,
-        #4b5563 20%,
-        #374151 40%,
-        #374151 100%
-    );
+/* --- GLASSMORPHISM --- */
+.glass-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px); /* Safari support */
+    border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
-@keyframes shimmer {
-    0% { background-position: -468px 0; }
-    100% { background-position: 468px 0; }
+.dark .glass-card {
+    background: rgba(30, 41, 59, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* -----------------------------------------------------------
-   PHASE 2: CALENDAR VIEW STYLES
-   ----------------------------------------------------------- */
-.calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
+/* --- ANIMATIONS --- */
+
+/* 1. Card Hover Lift */
+.hover-lift {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+}
+.hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* 2. Fade In (For Lists & Toasts) */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* 3. Floating Blobs (Login Background) */
+@keyframes blob {
+    0% { transform: translate(0px, 0px) scale(1); }
+    33% { transform: translate(30px, -50px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.9); }
+    100% { transform: translate(0px, 0px) scale(1); }
+}
+.animate-blob {
+    animation: blob 7s infinite;
+}
+.animation-delay-2000 {
+    animation-delay: 2s;
+}
+.animation-delay-4000 {
+    animation-delay: 4s;
+}
+
+/* 4. Scanner Line (OCR) */
+@keyframes scan {
+    0% { top: 0; }
+    50% { top: 100%; }
+    100% { top: 0; }
+}
+.scan-line {
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background: #6366F1;
+    box-shadow: 0 0 15px #6366F1;
+    animation: scan 2s infinite linear;
+    top: 0;
+    z-index: 10;
+}
+
+/* 5. Shake Effect (Wrong PIN) */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
+.animate-shake {
+    animation: shake 0.3s ease-in-out;
+}
+
+/* --- PRIVACY MODE (Blur Sensitive Data) --- */
+body.privacy-active .privacy-blur, 
+body.privacy-active #balance, 
+body.privacy-active #total-income, 
+body.privacy-active #total-expense,
+body.privacy-active #total-saved,
+body.privacy-active #total-monthly,
+body.privacy-active #forecast-amount {
+    filter: blur(8px);
+    transition: filter 0.3s ease;
+    user-select: none;
+}
+
+/* --- BACKGROUNDS & PATTERNS --- */
+
+/* Mesh Background (Login Page) */
+.mesh-bg {
+    background-color: #f3f4f6;
+    background-image: 
+        radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+        radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+        radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+}
+.dark .mesh-bg {
+    background-color: #0f172a;
+    background-image: 
+        radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+        radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+        radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+}
+
+/* Progress Bar Transitions */
+.progress-bar-fill {
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- PWA FIXES --- */
+
+/* Safe Area (iPhone Home Bar) */
+.pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Hide Install Button in Standalone Mode */
+.pwa-standalone #install-btn {
+    display: none !important;
+}
+
+/* Adjust Top Padding for Status Bar */
+.pwa-standalone main {
+    padding-top: max(2rem, env(safe-area-inset-top)) !important;
+}
+
+/* Calculator Grid (Hidden by default) */
+.calculator {
+    display: none;
+    grid-template-columns: repeat(4, 1fr);
     gap: 0.5rem;
 }
-
-/* Mobile responsive adjustments for Calendar */
-@media (max-width: 640px) {
-    .calendar-grid {
-        gap: 0.25rem;
-    }
-    .calendar-day {
-        height: 3.5rem !important; /* Smaller height on mobile */
-        padding-top: 0.25rem;
-    }
-    
-    /* Hide specific elements on very small screens if needed */
-    .calendar-day span.text-xs {
-        font-size: 0.6rem;
-    }
+.calculator.active {
+    display: grid;
 }
-
-/* Highlight style for active/selected day */
-.calendar-day.active {
-    border-color: #6366f1; /* Indigo-500 */
-    background-color: #e0e7ff; /* Indigo-100 */
+.calc-btn {
+    transition: all 0.1s;
 }
-
-.dark .calendar-day.active {
-    background-color: rgba(79, 70, 229, 0.2);
-    border-color: #4f46e5;
-}
-
-/* -----------------------------------------------------------
-   PHASE 3: SWIPE ACTIONS (NEW)
-   ----------------------------------------------------------- */
-
-/* Transaction Item Container */
-.swipe-item-wrapper {
-    position: relative;
-    overflow: hidden;
-    border-radius: 0.5rem;
-    margin-bottom: 0.75rem;
-}
-
-/* The Red Background (Delete Action) */
-.swipe-actions {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    right: 0;
-    width: 100%;
-    background-color: #ef4444; /* Red-500 */
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    padding-right: 1.5rem;
-    border-radius: 0.5rem;
-    z-index: 0;
-}
-
-/* The actual Transaction Card (Foreground) */
-.swipe-content {
-    position: relative;
-    z-index: 10;
-    background-color: white; /* or gray-50 based on theme */
-    transition: transform 0.2s ease-out; /* Smooth snapping */
-    border-radius: 0.5rem;
-}
-
-.dark .swipe-content {
-    background-color: #1f2937; /* Dark mode bg */
-}
-
-/* Visual cue while swiping - disables transition for instant drag response */
-.swiping {
-    transition: none !important; 
+.calc-btn:active {
+    transform: scale(0.95);
+    opacity: 0.8;
 }
