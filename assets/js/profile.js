@@ -1,142 +1,130 @@
-/**
- * FinTrack Profile Manager
- * Handles user profile loading, updating, and saving to Firestore.
- */
-
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Initialize Firebase Services
-    // Ensure window.auth and window.db are populated from firebase.js
-    const auth = window.auth || firebase.auth();
-    const db = window.db || firebase.firestore();
-
-    // DOM Elements
-    const profileForm = document.getElementById('profile-form');
-    const nameInput = document.getElementById('profile-name');
-    const emailInput = document.getElementById('profile-email'); // Email field
-    const phoneInput = document.getElementById('profile-phone');
-    const currencyInput = document.getElementById('profile-currency');
-    
-    // Display Elements (Card)
-    const displayNameEl = document.getElementById('display-name');
-    const displayEmailEl = document.getElementById('display-email');
-    const profileAvatar = document.getElementById('profile-avatar');
-    
-    // Buttons
-    const saveBtn = document.getElementById('save-profile-btn');
-    const logoutBtn = document.getElementById('logout-btn-2');
-
-    // 2. Listen for Auth State Changes
     auth.onAuthStateChanged(user => {
         if (user) {
-            console.log("User detected:", user.email);
-            loadUserProfile(user);
+            initializeProfile(user);
         } else {
-            // Redirect to login if not authenticated
             window.location.href = 'login.html';
         }
     });
+});
 
-    // 3. Load User Profile Data
-    async function loadUserProfile(user) {
-        // A. Load Basic Auth Data (Email & Photo) immediately
-        emailInput.value = user.email || '';
-        displayEmailEl.textContent = user.email || 'No Email';
-        
-        // B. Load Extended Data from Firestore
-        try {
-            const doc = await db.collection('users').doc(user.uid).get();
+function initializeProfile(user) {
+    const nameEl = document.getElementById('profile-name');
+    const emailEl = document.getElementById('profile-email');
+    const avatarEl = document.getElementById('profile-avatar');
+    const joinDateEl = document.getElementById('join-date');
+    const activeGoalsEl = document.getElementById('active-goals');
+    
+    const editBtn = document.getElementById('edit-profile-btn');
+    const modal = document.getElementById('profile-modal');
+    const closeBtn = document.getElementById('close-modal');
+    const form = document.getElementById('profile-form');
+    
+    const logoutBtn = document.getElementById('logout-btn-card');
+    const themeToggle = document.getElementById('theme-toggle');
+
+    // --- 1. LOAD DATA ---
+    const userRef = db.collection('users').doc(user.uid);
+    const goalsRef = db.collection('users').doc(user.uid).collection('goals');
+
+    // Basic Info
+    userRef.get().then(doc => {
+        if (doc.exists) {
+            const data = doc.data();
+            nameEl.innerText = data.name || 'User';
+            emailEl.innerText = user.email;
             
-            if (doc.exists) {
-                const data = doc.data();
-                
-                // Populate Form Fields
-                nameInput.value = data.displayName || user.displayName || '';
-                phoneInput.value = data.phoneNumber || ''; // Phone number fix
-                currencyInput.value = data.currency || 'INR';
+            // Initials for Avatar
+            const name = data.name || user.email;
+            const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            avatarEl.innerText = initials;
 
-                // Update Display Card
-                displayNameEl.textContent = data.displayName || user.displayName || 'User';
-                
-                // Update Avatar if exists
-                if (user.photoURL) {
-                    profileAvatar.innerHTML = `<img src="${user.photoURL}" class="w-full h-full object-cover">`;
-                } else {
-                    // Initials
-                    const name = data.displayName || user.displayName || 'U';
-                    profileAvatar.innerHTML = name.charAt(0).toUpperCase();
-                }
-
-            } else {
-                // First time user? Pre-fill from Auth
-                console.log("No profile doc found, creating defaults...");
-                nameInput.value = user.displayName || '';
-                displayNameEl.textContent = user.displayName || 'User';
-            }
-        } catch (error) {
-            console.error("Error loading profile:", error);
-            alert("Failed to load profile data. Please check your internet.");
+            // Join Date
+            // Auth metadata creationTime is standard
+            const created = new Date(user.metadata.creationTime);
+            if(joinDateEl) joinDateEl.innerText = created.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
         }
-    }
+    });
 
-    // 4. Save Profile Changes
-    if (profileForm) {
-        profileForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const user = auth.currentUser;
-            if (!user) return;
+    // Stats: Count Active Goals
+    goalsRef.get().then(snap => {
+        if(activeGoalsEl) activeGoalsEl.innerText = snap.size;
+    });
 
-            // Show Loading State
-            const originalBtnText = saveBtn.innerHTML;
-            saveBtn.disabled = true;
-            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Saving...';
-
-            // Get Input Values
-            const updatedData = {
-                displayName: nameInput.value.trim(),
-                phoneNumber: phoneInput.value.trim(),
-                currency: currencyInput.value,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            };
-
-            try {
-                // A. Update Firestore (Use set with merge: true to fix "Not Saving" issue)
-                await db.collection('users').doc(user.uid).set(updatedData, { merge: true });
-
-                // B. Update Auth Profile (DisplayName)
-                if (updatedData.displayName !== user.displayName) {
-                    await user.updateProfile({
-                        displayName: updatedData.displayName
-                    });
-                }
-
-                // Update UI immediately
-                displayNameEl.textContent = updatedData.displayName;
-                
-                // Success Feedback
-                saveBtn.innerHTML = '<i class="fas fa-check mr-2"></i> Saved!';
-                setTimeout(() => {
-                    saveBtn.innerHTML = originalBtnText;
-                    saveBtn.disabled = false;
-                }, 2000);
-
-            } catch (error) {
-                console.error("Error saving profile:", error);
-                alert("Error saving data: " + error.message);
-                
-                // Reset Button
-                saveBtn.innerHTML = originalBtnText;
-                saveBtn.disabled = false;
-            }
+    // --- 2. EDIT PROFILE ---
+    if(editBtn) {
+        editBtn.addEventListener('click', () => {
+            document.getElementById('edit-name').value = nameEl.innerText;
+            document.getElementById('edit-email').value = emailEl.innerText;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
         });
     }
 
-    // 5. Logout Handler
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            auth.signOut().then(() => {
-                window.location.href = 'login.html';
+    if(closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        });
+    }
+
+    if(form) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newName = document.getElementById('edit-name').value;
+            const btn = form.querySelector('button');
+            const originalText = btn.innerText;
+            btn.innerText = 'Saving...';
+            
+            userRef.update({ name: newName }).then(() => {
+                nameEl.innerText = newName;
+                const initials = newName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                avatarEl.innerText = initials;
+                
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                btn.innerText = originalText;
+                if(window.triggerHaptic) window.triggerHaptic(50);
+            }).catch(err => {
+                console.error(err);
+                btn.innerText = originalText;
+                alert("Failed to update profile.");
             });
         });
     }
-});
+
+    // --- 3. SETTINGS HANDLERS ---
+    
+    // Theme Toggle
+    if (themeToggle) {
+        // Set initial state based on current theme class
+        themeToggle.checked = document.documentElement.classList.contains('dark');
+        
+        themeToggle.addEventListener('change', () => {
+            document.body.classList.add('transition-colors', 'duration-300');
+            // Check if global toggleTheme exists in theme.js
+            if (typeof toggleTheme === 'function') {
+                toggleTheme();
+            } else {
+                // Fallback toggle logic
+                if (document.documentElement.classList.contains('dark')) {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+            if(window.triggerHaptic) window.triggerHaptic(10);
+        });
+    }
+
+    // Logout
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            if(confirm("Are you sure you want to log out?")) {
+                auth.signOut().then(() => window.location.href = 'login.html');
+            }
+        });
+    }
+}

@@ -1,222 +1,223 @@
-/**
- * FinTrack Goals Manager
- * Handles creating, updating, and deleting savings goals.
- */
-
 document.addEventListener('DOMContentLoaded', () => {
-    // DOM Elements
-    const goalsList = document.getElementById('goals-list');
-    const addGoalBtn = document.getElementById('add-goal-btn');
-    const modal = document.getElementById('goal-modal');
-    const form = document.getElementById('goal-form');
-    const closeModalBtn = document.getElementById('close-modal-btn');
-    
-    // Add Money Modal Elements
-    const addMoneyModal = document.getElementById('add-money-modal');
-    const addMoneyForm = document.getElementById('add-money-form');
-    const closeAddModal = document.getElementById('close-add-modal');
-    const addMoneyGoalName = document.getElementById('add-money-goal-name');
-    const addMoneyGoalId = document.getElementById('add-money-goal-id');
-
-    // Color Selection
-    const colorOptions = document.querySelectorAll('.color-option');
-    const colorInput = document.getElementById('goal-color');
-
-    // 1. Initialize & Listen for Auth
-    // Use window.auth as defined in updated firebase.js
-    const auth = window.auth || firebase.auth();
-    const db = window.db || firebase.firestore();
-
     auth.onAuthStateChanged(user => {
         if (user) {
-            loadGoals(user.uid);
-        } else {
-            goalsList.innerHTML = '<p class="text-center text-gray-500 col-span-3">Please login to view goals.</p>';
+            initializeGoals(user.uid);
         }
-    });
-
-    // 2. Load Goals (Real-time)
-    function loadGoals(uid) {
-        db.collection('users').doc(uid).collection('goals')
-            .orderBy('createdAt', 'desc')
-            .onSnapshot(snapshot => {
-                if (snapshot.empty) {
-                    goalsList.innerHTML = `
-                        <div class="col-span-full text-center py-10">
-                            <i class="fas fa-bullseye text-4xl text-gray-300 mb-3"></i>
-                            <p class="text-gray-500 dark:text-gray-400">No goals found. Create one to start saving!</p>
-                        </div>`;
-                    return;
-                }
-
-                goalsList.innerHTML = '';
-                snapshot.forEach(doc => {
-                    const goal = doc.data();
-                    renderGoalCard(doc.id, goal);
-                });
-            }, error => {
-                console.error("Error loading goals:", error);
-                goalsList.innerHTML = '<p class="text-red-500">Error loading goals.</p>';
-            });
-    }
-
-    // 3. Render Single Goal Card
-    function renderGoalCard(id, goal) {
-        const percentage = Math.min(100, Math.round((goal.saved / goal.target) * 100));
-        
-        // Colors map
-        const colors = {
-            blue: 'bg-blue-500',
-            green: 'bg-green-500',
-            purple: 'bg-purple-500',
-            pink: 'bg-pink-500',
-            yellow: 'bg-yellow-500'
-        };
-        const colorClass = colors[goal.color] || 'bg-indigo-500';
-
-        const card = document.createElement('div');
-        card.className = 'bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md transition-colors duration-200 relative group';
-        
-        card.innerHTML = `
-            <div class="flex justify-between items-start mb-4">
-                <div>
-                    <h3 class="text-lg font-bold text-gray-800 dark:text-white">${goal.name}</h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Target: ₹${goal.target.toLocaleString()}</p>
-                </div>
-                <div class="w-10 h-10 rounded-full ${colorClass} bg-opacity-20 flex items-center justify-center text-${goal.color}-600">
-                    <i class="fas fa-bullseye text-${goal.color}-500"></i>
-                </div>
-            </div>
-
-            <div class="mb-2 flex justify-between text-sm">
-                <span class="font-medium text-gray-700 dark:text-gray-300">₹${goal.saved.toLocaleString()}</span>
-                <span class="text-gray-500">${percentage}%</span>
-            </div>
-            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-6">
-                <div class="${colorClass} h-2.5 rounded-full transition-all duration-500" style="width: ${percentage}%"></div>
-            </div>
-
-            <div class="flex gap-2">
-                <button class="add-money-btn flex-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 py-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium" 
-                    data-id="${id}" data-name="${goal.name}">
-                    <i class="fas fa-plus mr-1"></i> Add Money
-                </button>
-                <button class="delete-goal-btn p-2 text-red-400 hover:text-red-600 transition-colors" data-id="${id}">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-        `;
-
-        goalsList.appendChild(card);
-    }
-
-    // 4. Handle "Create Goal" Form
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const user = auth.currentUser;
-        if (!user) return;
-
-        const name = document.getElementById('goal-name').value;
-        const target = parseFloat(document.getElementById('goal-target').value);
-        const saved = parseFloat(document.getElementById('goal-saved').value) || 0;
-        const color = colorInput.value;
-
-        try {
-            await db.collection('users').doc(user.uid).collection('goals').add({
-                name,
-                target,
-                saved,
-                color,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            toggleModal(false);
-            form.reset();
-        } catch (error) {
-            console.error("Error creating goal:", error);
-            alert("Failed to create goal.");
-        }
-    });
-
-    // 5. Handle "Add Money" Form
-    addMoneyForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const user = auth.currentUser;
-        if (!user) return;
-
-        const id = addMoneyGoalId.value;
-        const amount = parseFloat(document.getElementById('add-amount').value);
-
-        if (id && amount > 0) {
-            try {
-                // Get current goal to update
-                const goalRef = db.collection('users').doc(user.uid).collection('goals').doc(id);
-                
-                await db.runTransaction(async (transaction) => {
-                    const goalDoc = await transaction.get(goalRef);
-                    if (!goalDoc.exists) throw "Goal does not exist!";
-                    
-                    const newSaved = (goalDoc.data().saved || 0) + amount;
-                    transaction.update(goalRef, { saved: newSaved });
-                });
-
-                toggleAddMoneyModal(false);
-                addMoneyForm.reset();
-            } catch (error) {
-                console.error("Error adding money:", error);
-                alert("Failed to update goal.");
-            }
-        }
-    });
-
-    // 6. Event Delegation for Buttons (Add Money / Delete)
-    goalsList.addEventListener('click', (e) => {
-        // Add Money Button
-        const addBtn = e.target.closest('.add-money-btn');
-        if (addBtn) {
-            const id = addBtn.dataset.id;
-            const name = addBtn.dataset.name;
-            addMoneyGoalId.value = id;
-            addMoneyGoalName.textContent = name;
-            toggleAddMoneyModal(true);
-        }
-
-        // Delete Button
-        const delBtn = e.target.closest('.delete-goal-btn');
-        if (delBtn) {
-            if (confirm('Are you sure you want to delete this goal?')) {
-                const id = delBtn.dataset.id;
-                const user = auth.currentUser;
-                if (user) {
-                    db.collection('users').doc(user.uid).collection('goals').doc(id).delete();
-                }
-            }
-        }
-    });
-
-    // 7. UI Helpers (Modals & Color Picker)
-    function toggleModal(show) {
-        if (show) modal.classList.remove('hidden');
-        else modal.classList.add('hidden');
-    }
-
-    function toggleAddMoneyModal(show) {
-        if (show) addMoneyModal.classList.remove('hidden');
-        else addMoneyModal.classList.add('hidden');
-    }
-
-    addGoalBtn.addEventListener('click', () => toggleModal(true));
-    closeModalBtn.addEventListener('click', () => toggleModal(false));
-    closeAddModal.addEventListener('click', () => toggleAddMoneyModal(false));
-
-    // Color Picker Logic
-    colorOptions.forEach(opt => {
-        opt.addEventListener('click', () => {
-            // Remove border from all
-            colorOptions.forEach(o => o.classList.remove('border-gray-500', 'scale-110'));
-            // Add border to selected
-            opt.classList.add('border-gray-500', 'scale-110');
-            // Set value
-            colorInput.value = opt.dataset.color;
-        });
     });
 });
+
+function initializeGoals(userId) {
+    const goalsRef = db.collection('users').doc(userId).collection('goals');
+    
+    const grid = document.getElementById('goals-grid');
+    const modal = document.getElementById('goal-modal');
+    const form = document.getElementById('goal-form');
+    const addBtn = document.getElementById('add-goal-btn');
+    const closeBtn = document.getElementById('close-modal');
+    const totalEl = document.getElementById('total-saved');
+
+    // --- 1. FETCH & RENDER (OLD DATA COMPATIBLE) ---
+    // Removed .orderBy() to prevent issues with missing fields in old data
+    goalsRef.onSnapshot(snapshot => {
+        if (!grid) return;
+        
+        grid.innerHTML = '';
+        let totalSaved = 0;
+
+        if (snapshot.empty) {
+            grid.innerHTML = `
+                <div class="col-span-full text-center py-12">
+                    <div class="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-flag text-gray-400 text-2xl"></i>
+                    </div>
+                    <p class="text-gray-500 dark:text-gray-400">Set your first financial goal!</p>
+                </div>`;
+            totalEl.innerText = '₹0';
+            return;
+        }
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const id = doc.id;
+            
+            // --- FIX: SUPPORT OLD DATA FIELDS ---
+            const targetAmt = data.targetAmount || data.target || 0;
+            const currentAmt = data.currentAmount || data.saved || data.amount || 0;
+            const goalName = data.name || "Unnamed Goal";
+            // Default to today if date is missing
+            const goalDate = data.deadline || data.date || new Date().toISOString().split('T')[0]; 
+            const goalColor = data.color || 'blue';
+
+            totalSaved += currentAmt;
+            
+            // Calculations
+            const percent = targetAmt > 0 ? Math.min((currentAmt / targetAmt) * 100, 100).toFixed(1) : 0;
+            const today = new Date();
+            const targetDate = new Date(goalDate);
+            const diffTime = targetDate - today;
+            const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            let statusText = `${daysLeft} days left`;
+            let statusColor = "text-gray-500";
+            if (daysLeft < 0) { statusText = "Overdue"; statusColor = "text-red-500"; }
+            if (percent >= 100) { statusText = "Completed!"; statusColor = "text-green-500"; }
+
+            // Color Map
+            const colorMap = {
+                'blue': 'text-blue-600 bg-blue-500',
+                'purple': 'text-purple-600 bg-purple-500',
+                'pink': 'text-pink-600 bg-pink-500',
+                'emerald': 'text-emerald-600 bg-emerald-500',
+                'amber': 'text-amber-600 bg-amber-500'
+            };
+            const theme = colorMap[goalColor] || colorMap['blue'];
+            const textColor = theme.split(' ')[0];
+            const bgColor = theme.split(' ')[1];
+
+            const html = `
+                <div class="glass-card p-6 rounded-3xl relative overflow-hidden group hover-lift transition-all">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="w-12 h-12 rounded-2xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center shadow-sm">
+                            <i class="fas fa-bullseye text-xl ${textColor}"></i>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="addFunds('${id}', ${currentAmt})" class="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center hover:bg-indigo-200 transition-colors"><i class="fas fa-plus text-xs"></i></button>
+                            <button onclick="editGoal('${id}')" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 flex items-center justify-center hover:bg-gray-200 transition-colors"><i class="fas fa-pen text-xs"></i></button>
+                            <button onclick="deleteGoal('${id}')" class="w-8 h-8 rounded-full bg-red-50 dark:bg-red-900/20 text-red-500 flex items-center justify-center hover:bg-red-100 transition-colors"><i class="fas fa-trash text-xs"></i></button>
+                        </div>
+                    </div>
+
+                    <h3 class="font-bold text-lg text-gray-900 dark:text-white mb-1">${goalName}</h3>
+                    <div class="flex justify-between items-end mb-3">
+                        <span class="text-2xl font-bold text-gray-900 dark:text-white">₹${currentAmt.toLocaleString()}</span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400 mb-1">of ₹${targetAmt.toLocaleString()}</span>
+                    </div>
+
+                    <div class="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2.5 mb-2 overflow-hidden">
+                        <div class="h-2.5 rounded-full ${bgColor} progress-bar-fill shadow-[0_0_10px_currentColor]" style="width: ${percent}%"></div>
+                    </div>
+
+                    <div class="flex justify-between items-center text-xs font-medium">
+                        <span class="${statusColor}">${statusText}</span>
+                        <span class="${textColor}">${percent}%</span>
+                    </div>
+                </div>
+            `;
+            grid.insertAdjacentHTML('beforeend', html);
+        });
+
+        totalEl.innerText = `₹${totalSaved.toLocaleString()}`;
+    });
+
+    // --- 2. ADD/EDIT LOGIC ---
+    let allGoals = [];
+    goalsRef.onSnapshot(snap => { 
+        // Also handling old fields here for edit modal pre-filling
+        allGoals = snap.docs.map(d => {
+            const data = d.data();
+            return {
+                id: d.id, 
+                ...data,
+                targetAmount: data.targetAmount || data.target,
+                currentAmount: data.currentAmount || data.saved || data.amount,
+                deadline: data.deadline || data.date
+            };
+        }); 
+    });
+
+    addBtn.addEventListener('click', () => {
+        form.reset();
+        document.getElementById('goal-id').value = '';
+        document.getElementById('modal-title').innerText = 'New Goal';
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    });
+
+    closeBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    });
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('goal-id').value;
+        const name = document.getElementById('goal-name').value;
+        const target = parseFloat(document.getElementById('goal-target').value);
+        const current = parseFloat(document.getElementById('goal-saved').value) || 0;
+        const date = document.getElementById('goal-date').value;
+        const color = document.querySelector('input[name="goal-color"]:checked')?.value || 'blue';
+
+        const btn = form.querySelector('button');
+        const oldText = btn.innerText;
+        btn.innerText = 'Saving...';
+        btn.disabled = true;
+
+        try {
+            const data = {
+                name, targetAmount: target, currentAmount: current, deadline: date, color
+            };
+
+            if (id) {
+                await goalsRef.doc(id).update(data);
+            } else {
+                data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                await goalsRef.add(data);
+            }
+
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            form.reset();
+            if(window.triggerHaptic) window.triggerHaptic(50);
+
+        } catch (error) {
+            console.error(error);
+            alert("Failed to save.");
+        } finally {
+            btn.innerText = oldText;
+            btn.disabled = false;
+        }
+    });
+
+    // --- 3. GLOBAL ACTIONS ---
+    window.addFunds = async (id, current) => {
+        const amount = prompt("Enter amount to add to this goal:");
+        if (amount && !isNaN(amount)) {
+            const val = parseFloat(amount);
+            if (val > 0) {
+                try {
+                    await goalsRef.doc(id).update({
+                        currentAmount: current + val
+                    });
+                    if(window.triggerHaptic) window.triggerHaptic(50);
+                } catch (e) {
+                    alert("Error updating.");
+                }
+            }
+        }
+    };
+
+    window.editGoal = (id) => {
+        const goal = allGoals.find(g => g.id === id);
+        if (goal) {
+            document.getElementById('goal-id').value = id;
+            document.getElementById('goal-name').value = goal.name;
+            document.getElementById('goal-target').value = goal.targetAmount;
+            document.getElementById('goal-saved').value = goal.currentAmount;
+            document.getElementById('goal-date').value = goal.deadline;
+            
+            const radio = document.querySelector(`input[name="goal-color"][value="${goal.color}"]`);
+            if(radio) radio.checked = true;
+
+            document.getElementById('modal-title').innerText = 'Edit Goal';
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+    };
+
+    window.deleteGoal = async (id) => {
+        if(window.triggerHaptic) window.triggerHaptic(50);
+        if (confirm('Delete this goal?')) {
+            await goalsRef.doc(id).delete();
+        }
+    };
+}

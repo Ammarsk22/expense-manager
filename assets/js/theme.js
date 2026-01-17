@@ -1,68 +1,74 @@
-/**
- * FinTrack Theme Manager
- * Handles Light/Dark mode toggling and updates the mobile status bar color.
- */
+// --- THEME MANAGER ---
+// Handles Dark/Light mode toggling and persistence
 
-// 1. Check and Apply Theme on Load
-const themeCheck = () => {
-    const userTheme = localStorage.getItem('theme');
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
+(function() {
+    // 1. IMMEDIATE APPLY (Prevent Flash of Incorrect Theme)
+    // Runs before DOM Content Loaded
+    function applyInitialTheme() {
+        const userPref = localStorage.getItem('theme');
+        const systemPref = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-    // Check saved preference or system preference
-    if (userTheme === 'dark' || (!userTheme && systemTheme)) {
-        document.documentElement.classList.add('dark');
-        updateMetaThemeColor('dark'); // Update mobile status bar
-        return 'dark';
-    } else {
-        document.documentElement.classList.remove('dark');
-        updateMetaThemeColor('light'); // Update mobile status bar
-        return 'light';
+        if (userPref === 'dark' || (!userPref && systemPref)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
     }
-};
 
-// 2. Update Browser Address Bar Color (Critical for Mobile PWA)
-const updateMetaThemeColor = (theme) => {
-    const metaThemeColor = document.querySelector("meta[name=theme-color]");
-    if (metaThemeColor) {
-        // Light Mode: Indigo-600 (#4F46E5) | Dark Mode: Gray-900 (#111827)
-        // These colors MUST match the header colors in your HTML files.
-        metaThemeColor.setAttribute("content", theme === 'dark' ? "#111827" : "#4F46E5");
-    }
-}
+    applyInitialTheme();
 
-// 3. Toggle Theme Function
-const toggleTheme = () => {
-    if (document.documentElement.classList.contains('dark')) {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
-        updateMetaThemeColor('light');
-    } else {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
-        updateMetaThemeColor('dark');
-    }
-    updateToggleState();
-};
+    // 2. GLOBAL TOGGLE FUNCTION
+    window.toggleTheme = function() {
+        const html = document.documentElement;
+        
+        if (html.classList.contains('dark')) {
+            html.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+            updateThemeIcons(false);
+        } else {
+            html.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+            updateThemeIcons(true);
+        }
+    };
 
-// 4. Sync Toggle Button State (for Settings page)
-const updateToggleState = () => {
-    const toggle = document.getElementById('theme-toggle');
-    if (toggle) {
-        toggle.checked = document.documentElement.classList.contains('dark');
-    }
-}
+    // 3. UPDATE ICONS (Moon/Sun)
+    // Helps update UI elements across different pages if they exist
+    function updateThemeIcons(isDark) {
+        // Toggle Switch inputs (Settings/Profile)
+        const toggles = document.querySelectorAll('#theme-toggle');
+        toggles.forEach(toggle => {
+            toggle.checked = isDark;
+        });
 
-// 5. Initialize on Page Load
-document.addEventListener('DOMContentLoaded', () => {
-    // Apply theme immediately
-    themeCheck();
-    
-    // Sync toggle button if it exists on the page
-    updateToggleState();
-    
-    // Attach event listener to the toggle button
-    const toggleBtn = document.getElementById('theme-toggle');
-    if(toggleBtn) {
-        toggleBtn.addEventListener('change', toggleTheme);
+        // Any custom icons (optional)
+        const icons = document.querySelectorAll('.theme-icon');
+        icons.forEach(icon => {
+            if (isDark) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        });
     }
-});
+
+    // 4. LISTEN FOR SYSTEM CHANGES
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        if (!localStorage.getItem('theme')) {
+            if (e.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+    });
+
+    // 5. SYNC ON LOAD
+    document.addEventListener('DOMContentLoaded', () => {
+        const isDark = document.documentElement.classList.contains('dark');
+        updateThemeIcons(isDark);
+    });
+
+})();

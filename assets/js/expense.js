@@ -2,25 +2,41 @@ document.addEventListener('DOMContentLoaded', () => {
     auth.onAuthStateChanged(user => {
         if (user) {
             initializeExpenseTracking(user.uid);
+            updateGreeting(); 
         }
     });
 });
 
-// Skeleton Loader
+// --- UI: SMART GREETING ---
+function updateGreeting() {
+    const hours = new Date().getHours();
+    const titleEl = document.getElementById('greeting-title');
+    if (!titleEl) return;
+
+    let greeting = "Welcome Back!";
+    if (hours >= 5 && hours < 12) greeting = "Good Morning!";
+    else if (hours >= 12 && hours < 17) greeting = "Good Afternoon!";
+    else if (hours >= 17 && hours < 22) greeting = "Good Evening!";
+    else greeting = "Late Night Hustle?";
+
+    titleEl.innerText = greeting;
+}
+
+// --- HELPER FUNCTIONS ---
+
 function getTransactionSkeleton() {
     return `
-        <div class="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg mb-3 shadow-sm border border-gray-100 dark:border-gray-700">
-            <div class="skeleton h-10 w-10 rounded-full mr-3"></div>
+        <div class="flex items-center p-3 mb-2 bg-white dark:bg-gray-800 rounded-2xl animate-pulse border border-gray-100 dark:border-gray-700">
+            <div class="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-full mr-3"></div>
             <div class="flex-1 space-y-2">
-                <div class="skeleton h-4 w-32"></div>
-                <div class="skeleton h-3 w-20"></div>
+                <div class="h-3 w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                <div class="h-2 w-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
             </div>
-            <div class="skeleton h-5 w-16"></div>
+            <div class="h-4 w-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
         </div>
     `;
 }
 
-// Icon Helper
 function getCategoryIcon(category, type) {
     const map = {
         'food': 'fa-utensils',
@@ -40,23 +56,18 @@ function getCategoryIcon(category, type) {
         'gift': 'fa-gift',
         'others': 'fa-tag'
     };
-    const key = category.toLowerCase();
-    // Default icons based on type if category not found
+    const key = category ? category.toLowerCase() : 'others';
     const defaultIcon = type === 'income' ? 'fa-wallet' : 'fa-receipt';
     return map[key] || defaultIcon;
 }
 
-// Date Formatter Helper
 function formatDateHeader(dateString) {
     const date = new Date(dateString);
     const today = new Date();
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
 
-    // Reset times for accurate comparison
-    date.setHours(0,0,0,0);
-    today.setHours(0,0,0,0);
-    yesterday.setHours(0,0,0,0);
+    date.setHours(0,0,0,0); today.setHours(0,0,0,0); yesterday.setHours(0,0,0,0);
 
     if (date.getTime() === today.getTime()) return "Today";
     if (date.getTime() === yesterday.getTime()) return "Yesterday";
@@ -65,6 +76,34 @@ function formatDateHeader(dateString) {
         day: 'numeric', month: 'short', year: 'numeric' 
     });
 }
+
+// --- AI: SMART SHORTEN ---
+function smartShorten(text) {
+    if (!text) return 'Unknown';
+    let clean = text.trim();
+
+    const junkPatterns = [
+        /^payment to\s+/i, /^transfer to\s+/i, /^money sent to\s+/i, 
+        /^bill for\s+/i, /^recharge of\s+/i, /^paid at\s+/i, /^purchase at\s+/i,
+        /\s+via upi.*/i, /\s+using.*/i, /upi-\d+/i
+    ];
+    junkPatterns.forEach(regex => clean = clean.replace(regex, ''));
+    clean = clean.replace(/[#:]\s*\d+/g, '').trim(); 
+
+    const lower = clean.toLowerCase();
+    if (lower.includes('uber') || lower.includes('ola')) return 'Cab Ride';
+    if (lower.includes('zomato') || lower.includes('swiggy')) return 'Food Order';
+    if (lower.includes('netflix')) return 'Netflix Sub';
+    if (lower.includes('spotify')) return 'Spotify Sub';
+    if (lower.includes('amazon') || lower.includes('flipkart')) return 'Shopping';
+    if (lower.includes('jio') || lower.includes('airtel') || lower.includes('vi ')) return 'Recharge';
+    if (lower.includes('petrol') || lower.includes('shell') || lower.includes('hp ')) return 'Fuel';
+
+    clean = clean.charAt(0).toUpperCase() + clean.slice(1);
+    return clean.length > 20 ? clean.substring(0, 18) + '..' : clean;
+}
+
+// --- MAIN LOGIC ---
 
 function initializeExpenseTracking(userId) {
     const transactionForm = document.getElementById('transaction-form');
@@ -80,18 +119,17 @@ function initializeExpenseTracking(userId) {
     const templatesRef = db.collection('users').doc(userId).collection('templates');
 
     let allAccounts = [];
-    let allTransactions = [];
     let allCategories = [];
 
-    // --- 1. SMART ACCOUNT DROPDOWN ---
+    // --- 1. ACCOUNT DROPDOWN ---
     const accountSelect = document.getElementById('account');
     
-    const renderAccountDropdown = () => {
+    const renderAccountDropdown = (transactions = []) => {
         if (!accountSelect) return;
         const currentVal = accountSelect.value; 
         
         if (allAccounts.length === 0) {
-            accountSelect.innerHTML = '<option value="" disabled selected>No accounts found. Add one first!</option>';
+            accountSelect.innerHTML = '<option value="" disabled selected>No accounts found.</option>';
             return;
         }
 
@@ -100,7 +138,7 @@ function initializeExpenseTracking(userId) {
 
         allAccounts.forEach(acc => {
             let liveBalance = (acc.openingBalance !== undefined) ? acc.openingBalance : 0;
-            allTransactions.forEach(t => {
+            transactions.forEach(t => {
                 if (t.accountId === acc.id) {
                     if (t.type === 'income') liveBalance += t.amount;
                     else if (t.type === 'expense') liveBalance -= t.amount;
@@ -121,18 +159,7 @@ function initializeExpenseTracking(userId) {
         }
     };
 
-    if (accountSelect) {
-        accountsRef.orderBy('name').onSnapshot(snapshot => {
-            allAccounts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderAccountDropdown();
-        });
-        transactionsRef.onSnapshot(snapshot => {
-            allTransactions = snapshot.docs.map(doc => doc.data());
-            renderAccountDropdown();
-        });
-    }
-
-    // --- 2. SMART CATEGORY DROPDOWN ---
+    // --- 2. CATEGORY DROPDOWN ---
     const categorySelect = document.getElementById('category');
     const typeSelect = document.getElementById('type'); 
 
@@ -168,6 +195,13 @@ function initializeExpenseTracking(userId) {
         }
     };
 
+    // Load Initial Data
+    if (accountSelect) {
+        accountsRef.orderBy('name').onSnapshot(snapshot => {
+            allAccounts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        });
+    }
+
     if (categorySelect) {
         categoriesRef.orderBy('name').onSnapshot(snapshot => {
             allCategories = snapshot.docs.map(doc => doc.data());
@@ -176,7 +210,117 @@ function initializeExpenseTracking(userId) {
         if (typeSelect) typeSelect.addEventListener('change', renderCategoryDropdown);
     }
 
-    // --- 3. ADD TRANSACTION FORM ---
+    // --- 3. AI INPUT LOGIC ---
+    const descInput = document.getElementById('description');
+    if (descInput) {
+        descInput.addEventListener('input', (e) => {
+            if (typeof AI !== 'undefined') {
+                const predictedCat = AI.predictCategory(e.target.value);
+                if (predictedCat && categorySelect) {
+                    const options = Array.from(categorySelect.options);
+                    const match = options.find(opt => opt.value.toLowerCase() === predictedCat.toLowerCase());
+                    if (match) {
+                        categorySelect.value = match.value;
+                        categorySelect.classList.add('ring-2', 'ring-indigo-500', 'border-indigo-500');
+                        setTimeout(() => categorySelect.classList.remove('ring-2', 'ring-indigo-500', 'border-indigo-500'), 1000);
+                    }
+                }
+            }
+        });
+
+        descInput.addEventListener('change', (e) => {
+            if (typeof AI !== 'undefined') {
+                const original = e.target.value;
+                const translated = AI.translate(original);
+                if (original.toLowerCase() !== translated.toLowerCase()) {
+                    e.target.value = translated;
+                    if (window.triggerHaptic) window.triggerHaptic(10);
+                }
+            }
+        });
+    }
+
+    // --- 4. REAL-TIME LIST & DASHBOARD ---
+    if (transactionList) {
+        transactionList.innerHTML = getTransactionSkeleton() + getTransactionSkeleton();
+
+        transactionsRef.orderBy('date', 'desc').orderBy('createdAt', 'desc').limit(50).onSnapshot(snapshot => {
+            transactionList.innerHTML = '';
+            
+            const transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            renderAccountDropdown(transactions);
+            updateDashboardSummary(transactions);
+
+            if (transactions.length === 0) {
+                transactionList.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-10 text-gray-400">
+                        <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700/50 rounded-full flex items-center justify-center mb-3">
+                            <i class="fas fa-receipt text-2xl opacity-50"></i>
+                        </div>
+                        <p class="text-sm font-medium">No transactions yet.</p>
+                    </div>`;
+                return;
+            }
+
+            const currencySymbol = getAppCurrency();
+            const groups = {};
+            transactions.forEach(t => { const k = t.date; if(!groups[k]) groups[k]=[]; groups[k].push(t); });
+
+            Object.keys(groups).forEach(date => {
+                // Header
+                transactionList.insertAdjacentHTML('beforeend', `
+                    <div class="sticky top-0 bg-gray-50/95 dark:bg-gray-900/95 backdrop-blur-md z-30 py-2 px-1 border-b border-gray-100 dark:border-gray-800">
+                        <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center">
+                            <i class="far fa-calendar mr-2"></i> ${formatDateHeader(date)}
+                        </h4>
+                    </div>
+                `);
+
+                // Items
+                groups[date].forEach(t => {
+                    const isIncome = t.type === 'income';
+                    const amountColor = isIncome ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-900 dark:text-white';
+                    const sign = isIncome ? '+' : '-';
+                    const iconClass = getCategoryIcon(t.category, t.type);
+                    const iconBg = isIncome ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400' : 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400';
+                    const displayTitle = smartShorten(t.description);
+
+                    // FIX: Replaced 'dark:bg-gray-800/60' with 'dark:bg-gray-800' (SOLID COLOR)
+                    const html = `
+                    <div class="swipe-item-wrapper mb-2 group" id="wrap-${t.id}">
+                        <div class="swipe-actions rounded-2xl">
+                            <span class="text-white font-bold flex items-center text-xs"><i class="fas fa-trash-alt mr-2"></i>DELETE</span>
+                        </div>
+                        <div class="swipe-content flex items-center p-3 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 relative z-10 transition-transform active:scale-[0.99]" id="item-${t.id}">
+                            
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center ${iconBg} mr-3 shrink-0 text-sm">
+                                <i class="fas ${iconClass}"></i>
+                            </div>
+
+                            <div class="flex-1 min-w-0 mr-3">
+                                <p class="font-bold text-gray-800 dark:text-gray-100 text-sm truncate">${displayTitle}</p>
+                                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+                                    ${t.category} <span class="mx-1 opacity-30">|</span> ${t.account}
+                                </p>
+                            </div>
+
+                            <div class="text-right shrink-0">
+                                <p class="font-bold text-sm ${amountColor}">${sign} ${currencySymbol}${t.amount.toLocaleString()}</p>
+                            </div>
+                        </div>
+                    </div>`;
+                    
+                    transactionList.insertAdjacentHTML('beforeend', html);
+                    const itemEl = document.getElementById(`item-${t.id}`);
+                    if (itemEl) addSwipeListeners(itemEl, t.id, t.description, transactionsRef);
+                });
+            });
+
+        }, error => console.error(error));
+    }
+
+    // --- 5. ADD TRANSACTION SUBMIT ---
     if (transactionForm) {
         transactionForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -232,124 +376,79 @@ function initializeExpenseTracking(userId) {
                 document.getElementById('date').valueAsDate = new Date();
                 if (typeSelect) typeSelect.dispatchEvent(new Event('change'));
 
-                if (navigator.vibrate) navigator.vibrate(50); // Haptic
+                if (window.triggerHaptic) window.triggerHaptic(50);
 
                 submitBtn.innerText = "Saved!";
-                submitBtn.classList.replace('bg-indigo-600', 'bg-green-600');
-                
                 setTimeout(() => {
                     submitBtn.innerText = originalBtnText;
-                    submitBtn.classList.replace('bg-green-600', 'bg-indigo-600');
                     submitBtn.disabled = false;
-                }, 2000);
+                }, 1500);
 
             } catch (error) {
                 console.error("Error saving:", error);
-                alert("Failed to save transaction.");
+                alert("Failed to save.");
                 submitBtn.innerText = originalBtnText;
                 submitBtn.disabled = false;
             }
         });
     }
+}
 
-    // --- 4. REAL-TIME LIST (Refined UI) ---
-    if (transactionList) {
-        transactionList.innerHTML = getTransactionSkeleton() + getTransactionSkeleton();
+// --- UPDATED SUMMARY & BUDGET BAR LOGIC ---
+function updateDashboardSummary(transactions) {
+    let inc = 0, exp = 0;
+    transactions.forEach(t => {
+        if(t.type === 'income') inc += t.amount;
+        else if(t.type === 'expense') exp += t.amount;
+    });
 
-        transactionsRef.orderBy('date', 'desc').orderBy('createdAt', 'desc').limit(20).onSnapshot(snapshot => {
-            transactionList.innerHTML = '';
+    const bal = inc - exp;
+    const currency = typeof getCurrency === 'function' ? getCurrency() : '₹';
+
+    const elInc = document.getElementById('total-income');
+    const elExp = document.getElementById('total-expense');
+    const elBal = document.getElementById('balance');
+    
+    // Budget Bar Elements
+    const progBar = document.getElementById('expense-progress');
+    const progText = document.getElementById('budget-text');
+
+    if(elInc) elInc.textContent = `${currency}${inc.toLocaleString()}`;
+    if(elExp) elExp.textContent = `${currency}${exp.toLocaleString()}`;
+    if(elBal) elBal.textContent = `${currency}${bal.toLocaleString()}`;
+
+    // Smart Bar Logic
+    if (progBar && progText) {
+        if (inc === 0) {
+            progBar.style.width = '0%';
+            progText.textContent = 'No income yet';
+        } else {
+            const percentage = Math.min((exp / inc) * 100, 100);
+            progBar.style.width = `${percentage}%`;
             
-            if (snapshot.empty) {
-                transactionList.innerHTML = `
-                    <div class="flex flex-col items-center justify-center py-8 text-gray-400">
-                        <i class="fas fa-receipt text-4xl mb-2 opacity-50"></i>
-                        <p class="text-sm">No transactions yet.</p>
-                    </div>`;
-                return;
-            }
+            // Color Shift (Green -> Yellow -> Red)
+            if (percentage < 50) progBar.className = "h-1.5 rounded-full transition-all duration-700 bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]";
+            else if (percentage < 80) progBar.className = "h-1.5 rounded-full transition-all duration-700 bg-yellow-500 shadow-[0_0_10px_rgba(245,158,11,0.4)]";
+            else progBar.className = "h-1.5 rounded-full transition-all duration-700 bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.4)]";
 
-            const currencySymbol = getAppCurrency();
-            
-            // Group By Date
-            const groups = {};
-            snapshot.forEach(doc => {
-                const data = doc.data();
-                const dateKey = data.date;
-                if (!groups[dateKey]) groups[dateKey] = [];
-                groups[dateKey].push({ id: doc.id, ...data });
-            });
-
-            // Iterate Groups
-            Object.keys(groups).forEach(date => {
-                // FIXED: Increased z-index to 30 to stay above items
-                // FIXED: Added backdrop blur and solid color for better readability
-                const headerHtml = `
-                    <div class="sticky top-0 bg-[#EAE5E1] dark:bg-gray-900 z-30 py-2 mb-2 px-1 border-b border-gray-200 dark:border-gray-700/50 backdrop-blur-sm bg-opacity-95 dark:bg-opacity-95">
-                        <h4 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center">
-                            <i class="fas fa-calendar-day mr-2 text-[10px]"></i>
-                            ${formatDateHeader(date)}
-                        </h4>
-                    </div>
-                `;
-                transactionList.insertAdjacentHTML('beforeend', headerHtml);
-
-                // Items in this group
-                groups[date].forEach(t => {
-                    const isIncome = t.type === 'income';
-                    const amountColor = isIncome ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-white';
-                    const sign = isIncome ? '+' : '-';
-                    const iconClass = getCategoryIcon(t.category, t.type);
-                    const iconBg = isIncome ? 'bg-green-100 text-green-600 dark:bg-green-900/40 dark:text-green-400' : 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400';
-
-                    // FIXED: Used solid 'bg-white' and 'dark:bg-gray-800' to prevent see-through
-                    // FIXED: Added 'min-w-0' to flex items to enforce truncation
-                    const html = `
-                    <div class="swipe-item-wrapper mb-3" id="wrap-${t.id}">
-                        <div class="swipe-actions rounded-xl">
-                            <span class="text-white font-bold flex items-center"><i class="fas fa-trash-alt mr-2"></i>Delete</span>
-                        </div>
-                        <div class="swipe-content flex items-center p-3.5 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 relative z-10" id="item-${t.id}">
-                            
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center ${iconBg} mr-3.5 shrink-0 text-lg shadow-inner">
-                                <i class="fas ${iconClass}"></i>
-                            </div>
-
-                            <div class="flex-1 min-w-0 mr-3">
-                                <p class="font-bold text-gray-800 dark:text-gray-100 text-sm truncate leading-snug">${t.description}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate flex items-center">
-                                    <span class="truncate max-w-[100px]">${t.category}</span>
-                                    <span class="mx-1.5 opacity-30">|</span> 
-                                    <span class="truncate max-w-[100px]">${t.account}</span>
-                                </p>
-                            </div>
-
-                            <div class="text-right shrink-0">
-                                <p class="font-bold text-sm ${amountColor} whitespace-nowrap">${sign} ${currencySymbol}${t.amount.toLocaleString()}</p>
-                            </div>
-                        </div>
-                    </div>`;
-                    
-                    transactionList.insertAdjacentHTML('beforeend', html);
-                    
-                    // Attach Swipe Listeners
-                    const itemEl = document.getElementById(`item-${t.id}`);
-                    if (itemEl) addSwipeListeners(itemEl, t.id, t.description, transactionsRef);
-                });
-            });
-
-        }, error => {
-             console.error("Error fetching transactions:", error);
-             transactionList.innerHTML = '<p class="text-red-500 text-center py-4 text-sm">Unable to load history.</p>';
+            progText.textContent = `${Math.round(percentage)}% of income used`;
+        }
+    }
+    
+    // Render Chart
+    if (typeof renderExpenseChart === 'function') {
+        const categoryData = {};
+        transactions.filter(t => t.type === 'expense').forEach(t => {
+            categoryData[t.category] = (categoryData[t.category] || 0) + t.amount;
         });
+        renderExpenseChart(categoryData);
     }
 }
 
-// --- SWIPE LOGIC HELPER ---
+// --- SWIPE LOGIC ---
 function addSwipeListeners(element, docId, description, ref) {
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let currentTranslate = 0;
-    let isSwiping = false;
+    let touchStartX = 0; let touchStartY = 0;
+    let currentTranslate = 0; let isSwiping = false;
     const maxSwipe = -100; 
 
     element.addEventListener('touchstart', (e) => {
@@ -362,11 +461,8 @@ function addSwipeListeners(element, docId, description, ref) {
     }, { passive: true });
 
     element.addEventListener('touchmove', (e) => {
-        const touchCurrentX = e.changedTouches[0].screenX;
-        const touchCurrentY = e.changedTouches[0].screenY;
-        const diffX = touchCurrentX - touchStartX;
-        const diffY = touchCurrentY - touchStartY;
-
+        const diffX = e.changedTouches[0].screenX - touchStartX;
+        const diffY = e.changedTouches[0].screenY - touchStartY;
         if (Math.abs(diffY) > Math.abs(diffX)) return;
 
         if (diffX < 0) {
@@ -378,40 +474,38 @@ function addSwipeListeners(element, docId, description, ref) {
 
     element.addEventListener('touchend', (e) => {
         element.classList.remove('swiping'); 
-        const touchEndX = e.changedTouches[0].screenX;
-        
         if (currentTranslate < -60) {
             element.style.transform = `translateX(${maxSwipe}px)`;
-            if (currentTranslate < -200) {
-                confirmDelete(docId, description, ref);
-            }
+            if (currentTranslate < -200) confirmDelete(docId, description, ref);
         } else {
             element.style.transform = 'translateX(0)';
         }
-        
-        isSwiping = false;
-        currentTranslate = 0;
+        isSwiping = false; currentTranslate = 0;
     });
     
     const wrapper = document.getElementById(`wrap-${docId}`);
     if(wrapper) {
         const deleteBtn = wrapper.querySelector('.swipe-actions');
-        // Prevent multiple listeners
         const newBtn = deleteBtn.cloneNode(true);
         deleteBtn.parentNode.replaceChild(newBtn, deleteBtn);
-        
-        newBtn.addEventListener('click', () => {
-             confirmDelete(docId, description, ref);
-        });
+        newBtn.addEventListener('click', () => confirmDelete(docId, description, ref));
     }
 }
 
+// --- UNDO DELETE ---
 function confirmDelete(docId, description, ref) {
-    if (navigator.vibrate) navigator.vibrate(50);
-    if (confirm(`Delete transaction "${description}"?`)) {
-        ref.doc(docId).delete().catch(err => alert("Error deleting"));
-    } else {
-        const el = document.getElementById(`item-${docId}`);
-        if(el) el.style.transform = 'translateX(0)';
-    }
+    if (window.triggerHaptic) window.triggerHaptic(50);
+    
+    ref.doc(docId).get().then(doc => {
+        if (doc.exists) {
+            const backupData = doc.data();
+            ref.doc(docId).delete().then(() => {
+                if (window.showUndoToast) {
+                    window.showUndoToast(`Deleted "${description}"`, () => {
+                        ref.doc(docId).set(backupData).then(() => console.log("Restored"));
+                    });
+                }
+            }).catch(err => alert("Error deleting"));
+        }
+    }).catch(err => console.error(err));
 }

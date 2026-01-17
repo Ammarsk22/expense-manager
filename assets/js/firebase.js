@@ -1,6 +1,6 @@
+// --- FIREBASE CONFIGURATION ---
+// Replace the values below with your own Firebase project configuration if needed.
 const firebaseConfig = {
-  // Your specific API Key has been inserted here.
-  // IMPORTANT: For security, it is recommended to regenerate this key.
   apiKey: "AIzaSyD7b0EZiWLLx_Yb1Su3Id4l8ZiB7W4kfOQ", 
   authDomain: "personal-expensemanager-39eec.firebaseapp.com",
   projectId: "personal-expensemanager-39eec",
@@ -10,16 +10,35 @@ const firebaseConfig = {
   measurementId: "G-6XBN1Q5EL9"
 };
 
-// Initialize Firebase using the "compat" version of the SDK
-const app = firebase.initializeApp(firebaseConfig);
+// --- INITIALIZE FIREBASE ---
+// Check if firebase is already initialized to avoid errors
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+} else {
+    firebase.app(); // if already initialized, use that one
+}
 
-// Initialize Firebase services
+// --- INITIALIZE SERVICES ---
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// --- CRITICAL FIX ---
-// Make services globally available for other scripts (forecast.js, split.js, etc.)
+// --- ENABLE OFFLINE PERSISTENCE (PWA Feature) ---
+// This allows the app to work without internet connection
+db.enablePersistence()
+    .catch((err) => {
+        if (err.code == 'failed-precondition') {
+            // Multiple tabs open, persistence can only be enabled in one tab at a time.
+            console.warn('Persistence failed: Multiple tabs open');
+        } else if (err.code == 'unimplemented') {
+            // The current browser does not support all of the features required to enable persistence
+            console.warn('Persistence not supported in this browser');
+        }
+    });
+
+// --- GLOBAL EXPORTS ---
+// Make auth and db available globally for other scripts (auth.js, main.js, etc.)
 window.auth = auth;
 window.db = db;
+window.firebaseConfig = firebaseConfig; // Helpful for debugging
 
-console.log("Firebase initialized successfully.");
+console.log("🔥 Firebase initialized with Offline Persistence.");

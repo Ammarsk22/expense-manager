@@ -1,122 +1,100 @@
-/**
- * Split Bill Logic
- * Calculates shares and adds to Debt Manager
- */
-
 document.addEventListener('DOMContentLoaded', () => {
-    const totalInput = document.getElementById('total-amount');
-    const peopleList = document.getElementById('people-list');
-    const addPersonBtn = document.getElementById('add-person-btn');
-    const includeMeCheckbox = document.getElementById('include-me');
-    const perPersonDisplay = document.getElementById('per-person-amount');
-    const splitSummary = document.getElementById('split-summary');
-    const form = document.getElementById('split-form');
+    // Initial State: 2 People
+    addPerson('You');
+    addPerson('Friend');
+});
 
-    // 1. Add New Person Field
-    addPersonBtn.addEventListener('click', () => {
-        const div = document.createElement('div');
-        div.className = 'flex gap-2';
-        div.innerHTML = `
-            <input type="text" class="person-name w-full p-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 dark:text-white text-sm" placeholder="Friend's Name" required>
-            <button type="button" class="text-red-500 hover:text-red-700 px-2 remove-btn"><i class="fas fa-trash"></i></button>
-        `;
-        peopleList.appendChild(div);
-        
-        // Add delete event to new button
-        div.querySelector('.remove-btn').addEventListener('click', () => {
-            div.remove();
-            calculateSplit();
-        });
+function addPerson(nameValue = '') {
+    const list = document.getElementById('people-list');
+    const id = Date.now();
+    
+    const div = document.createElement('div');
+    div.className = 'flex items-center gap-2 animate-fade-in';
+    div.id = `person-${id}`;
+    
+    div.innerHTML = `
+        <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+            <i class="fas fa-user"></i>
+        </div>
+        <input type="text" class="person-name flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl py-2.5 px-4 text-sm dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Name" value="${nameValue}">
+        <button onclick="removePerson('${id}')" class="w-10 h-10 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    list.appendChild(div);
+}
 
-        calculateSplit();
+function removePerson(id) {
+    const el = document.getElementById(`person-${id}`);
+    if (el) el.remove();
+}
+
+function calculateSplit() {
+    if(window.triggerHaptic) window.triggerHaptic(50);
+
+    const amountInput = parseFloat(document.getElementById('total-amount').value);
+    const tipPercent = parseFloat(document.getElementById('tip-percent').value) || 0;
+    const taxPercent = parseFloat(document.getElementById('tax-percent').value) || 0;
+    
+    const peopleInputs = document.querySelectorAll('.person-name');
+    const people = [];
+    peopleInputs.forEach(input => {
+        if(input.value.trim() !== '') people.push(input.value.trim());
     });
 
-    // 2. Real-time Calculation
-    function calculateSplit() {
-        const total = parseFloat(totalInput.value) || 0;
-        const friendsCount = document.querySelectorAll('.person-name').length;
-        const includeMe = includeMeCheckbox.checked ? 1 : 0;
-        const totalPeople = friendsCount + includeMe;
-
-        if (totalPeople === 0) {
-            perPersonDisplay.textContent = '₹0.00';
-            splitSummary.textContent = '0 people total';
-            return;
-        }
-
-        const share = total / totalPeople;
-        perPersonDisplay.textContent = `₹${share.toFixed(2)}`;
-        
-        let summaryText = `${friendsCount} friend${friendsCount !== 1 ? 's' : ''}`;
-        if (includeMe) summaryText += ' + You';
-        splitSummary.textContent = `${summaryText} = ${totalPeople} total`;
+    if (isNaN(amountInput) || amountInput <= 0) {
+        alert("Please enter a valid bill amount.");
+        return;
     }
 
-    // Event Listeners for Calculation
-    totalInput.addEventListener('input', calculateSplit);
-    includeMeCheckbox.addEventListener('change', calculateSplit);
-    peopleList.addEventListener('input', calculateSplit); // Re-calc if typing (optional, but good for validation)
+    if (people.length === 0) {
+        alert("Please add at least one person.");
+        return;
+    }
 
-    // 3. Save to Debts
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const user = firebase.auth().currentUser;
-        if (!user) return alert('Please login first');
+    // Calculations
+    const tipAmount = amountInput * (tipPercent / 100);
+    const taxAmount = amountInput * (taxPercent / 100);
+    const totalBill = amountInput + tipAmount + taxAmount;
+    const splitAmount = totalBill / people.length;
 
-        const total = parseFloat(totalInput.value);
-        const description = document.getElementById('split-desc').value;
-        const friendInputs = document.querySelectorAll('.person-name');
-        const includeMe = includeMeCheckbox.checked ? 1 : 0;
-        const totalPeople = friendInputs.length + includeMe;
+    // Update UI
+    document.getElementById('split-per-person').innerText = `₹${formatMoney(splitAmount)}`;
+    document.getElementById('final-total').innerText = `₹${formatMoney(totalBill)}`;
+    document.getElementById('total-people').innerText = people.length;
 
-        if (totalPeople <= 1 && includeMe) {
-            return alert('Add at least one friend to split with.');
-        }
+    const resultList = document.getElementById('result-list');
+    resultList.innerHTML = '';
 
-        const shareAmount = parseFloat((total / totalPeople).toFixed(2));
-        const date = new Date().toISOString().split('T')[0]; // Today YYYY-MM-DD
-
-        const batch = db.batch(); // Use batch for multiple writes
-
-        // Create Debt Record for each friend
-        friendInputs.forEach(input => {
-            const name = input.value.trim();
-            if (name) {
-                const docRef = db.collection('users').doc(user.uid).collection('debts').doc();
-                batch.set(docRef, {
-                    type: 'lent', // "I Lent" (To Receive)
-                    person: name,
-                    amount: shareAmount,
-                    description: `Split: ${description}`,
-                    date: date,
-                    status: 'pending', // Optional status
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            }
-        });
-
-        // Optional: Add "My Expense" to Transaction History (if included)
-        if (includeMe) {
-            const expenseRef = db.collection('users').doc(user.uid).collection('transactions').doc();
-            batch.set(expenseRef, {
-                type: 'expense',
-                category: 'Food', // Default or ask user
-                amount: shareAmount,
-                description: `My Share: ${description}`,
-                account: 'Cash', // Default or ask user
-                date: date,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        }
-
-        try {
-            await batch.commit();
-            alert(`Split successful! Added ₹${shareAmount} to Debt Manager for each friend.`);
-            window.location.href = 'debt.html'; // Redirect to Debts page
-        } catch (error) {
-            console.error("Error splitting bill: ", error);
-            alert('Error saving data. Please try again.');
-        }
+    people.forEach(person => {
+        const html = `
+            <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-700">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 text-xs font-bold">
+                        ${person.charAt(0).toUpperCase()}
+                    </div>
+                    <span class="font-medium text-gray-800 dark:text-white text-sm">${person}</span>
+                </div>
+                <span class="font-bold text-gray-900 dark:text-white">₹${formatMoney(splitAmount)}</span>
+            </div>
+        `;
+        resultList.insertAdjacentHTML('beforeend', html);
     });
-});
+}
+
+function resetSplit() {
+    document.getElementById('total-amount').value = '';
+    document.getElementById('tip-percent').value = '';
+    document.getElementById('tax-percent').value = '';
+    document.getElementById('people-list').innerHTML = '';
+    addPerson('You');
+    addPerson('Friend');
+    document.getElementById('split-per-person').innerText = '₹0';
+    document.getElementById('final-total').innerText = '₹0';
+    document.getElementById('result-list').innerHTML = '<p class="text-center text-gray-400 text-sm py-4">Enter amount and people to see results.</p>';
+}
+
+function formatMoney(amount) {
+    return amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}

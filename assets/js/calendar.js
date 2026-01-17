@@ -7,180 +7,186 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initializeCalendar(userId) {
-    const calendarDays = document.getElementById('calendar-days');
-    const monthYearText = document.getElementById('current-month-year');
+    const calendarBody = document.getElementById('calendar-body');
+    const monthDisplay = document.getElementById('current-month-display');
     const prevBtn = document.getElementById('prev-month');
     const nextBtn = document.getElementById('next-month');
-    const selectedDateTitle = document.getElementById('selected-date-title');
-    const dayTransactionsList = document.getElementById('day-transactions');
     
+    const detailsPanel = document.getElementById('date-details-panel');
+    const detailsTitle = document.getElementById('selected-date-title');
+    const detailsList = document.getElementById('selected-date-list');
+
+    const incomeEl = document.getElementById('cal-income');
+    const expenseEl = document.getElementById('cal-expense');
+
     let currentDate = new Date();
-    let currentMonth = currentDate.getMonth();
-    let currentYear = currentDate.getFullYear();
-    let transactionsMap = {}; // Stores transactions by date: "2024-03-12": [tx1, tx2]
+    let currentTransactions = [];
 
-    // Initial Load
-    renderCalendar();
+    // --- 1. FETCH DATA ---
+    function fetchData() {
+        // Range: Start to End of current month
+        const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+        const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59);
 
-    // Event Listeners for Nav
-    prevBtn.addEventListener('click', () => {
-        currentMonth--;
-        if (currentMonth < 0) { currentMonth = 11; currentYear--; }
-        renderCalendar();
-    });
+        // Fetching slightly more to be safe, filtering client side for simplicity
+        // Ideally use 'where' clauses for start/end date
+        db.collection('users').doc(userId).collection('transactions')
+            .orderBy('date', 'desc')
+            .get()
+            .then(snapshot => {
+                const allData = snapshot.docs.map(doc => doc.data());
+                
+                // Filter for current month view
+                currentTransactions = allData.filter(t => {
+                    const d = new Date(t.date);
+                    return d >= startOfMonth && d <= endOfMonth;
+                });
 
-    nextBtn.addEventListener('click', () => {
-        currentMonth++;
-        if (currentMonth > 11) { currentMonth = 0; currentYear++; }
-        renderCalendar();
-    });
-
-    function renderCalendar() {
-        // Update Header
-        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-        monthYearText.textContent = `${monthNames[currentMonth]} ${currentYear}`;
-        
-        calendarDays.innerHTML = '<div class="col-span-7 flex justify-center p-4"><div class="skeleton h-10 w-full"></div></div>'; // Loading state
-
-        // Fetch Data for this month
-        fetchMonthData(userId, currentYear, currentMonth).then(data => {
-            transactionsMap = data;
-            generateGrid();
-        });
+                renderCalendar();
+                updateStats();
+            });
     }
 
-    function generateGrid() {
-        calendarDays.innerHTML = '';
-        
-        const firstDay = new Date(currentYear, currentMonth, 1).getDay(); // 0 = Sun
-        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-        
-        // Empty slots for previous month days
+    // --- 2. RENDER CALENDAR ---
+    function renderCalendar() {
+        calendarBody.innerHTML = '';
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+
+        // Update Header
+        monthDisplay.innerText = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        // Empty slots for previous month
         for (let i = 0; i < firstDay; i++) {
-            const emptyDiv = document.createElement('div');
-            emptyDiv.className = 'calendar-day bg-transparent';
-            calendarDays.appendChild(emptyDiv);
+            const emptyCell = document.createElement('div');
+            emptyCell.className = 'calendar-cell bg-gray-50/30 dark:bg-gray-800/30 border border-gray-100 dark:border-gray-800/50';
+            calendarBody.appendChild(emptyCell);
         }
 
-        const todayStr = new Date().toISOString().split('T')[0];
-
         // Days
+        const today = new Date();
+        
         for (let day = 1; day <= daysInMonth; day++) {
-            // Format date string YYYY-MM-DD (ensuring 0 padding)
-            const monthStr = (currentMonth + 1).toString().padStart(2, '0');
-            const dayStr = day.toString().padStart(2, '0');
-            const dateKey = `${currentYear}-${monthStr}-${dayStr}`;
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
             
-            const dayEl = document.createElement('div');
-            dayEl.className = `calendar-day relative bg-white dark:bg-gray-700 rounded-lg shadow-sm hover:shadow-md cursor-pointer transition-all border border-gray-100 dark:border-gray-600 flex flex-col items-center justify-start pt-1 sm:pt-2 h-16 sm:h-24`;
+            // Find transactions for this day
+            const dailyTx = currentTransactions.filter(t => t.date === dateStr);
+            let dailyIncome = 0;
+            let dailyExpense = 0;
+            dailyTx.forEach(t => {
+                if(t.type === 'income') dailyIncome += t.amount;
+                else dailyExpense += t.amount;
+            });
+
+            // Cell Container
+            const cell = document.createElement('div');
+            // Base classes
+            cell.className = 'calendar-cell border border-gray-100 dark:border-gray-800 p-1 relative hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer flex flex-col items-center md:items-start md:p-2';
             
             // Highlight Today
-            if (dateKey === todayStr) {
-                dayEl.classList.add('ring-2', 'ring-indigo-500');
+            if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                cell.classList.add('bg-indigo-50', 'dark:bg-indigo-900/20');
             }
 
-            // Day Number
-            dayEl.innerHTML = `<span class="text-sm font-semibold text-gray-700 dark:text-gray-300">${day}</span>`;
+            // Date Number
+            const dateNum = document.createElement('span');
+            dateNum.className = `text-xs md:text-sm font-semibold w-6 h-6 flex items-center justify-center rounded-full ${
+                (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) 
+                ? 'bg-indigo-600 text-white shadow-md' 
+                : 'text-gray-700 dark:text-gray-300'
+            }`;
+            dateNum.innerText = day;
+            cell.appendChild(dateNum);
 
             // Indicators
-            if (transactionsMap[dateKey]) {
-                const dayTxs = transactionsMap[dateKey];
-                const hasExpense = dayTxs.some(t => t.type === 'expense');
-                const hasIncome = dayTxs.some(t => t.type === 'income');
-                
-                const indicatorContainer = document.createElement('div');
-                indicatorContainer.className = 'flex gap-1 mt-1 sm:mt-2';
-                
-                if (hasExpense) {
-                    indicatorContainer.innerHTML += `<div class="w-2 h-2 rounded-full bg-red-500"></div>`;
+            if (dailyTx.length > 0) {
+                // MOBILE: Dots
+                const dotsContainer = document.createElement('div');
+                dotsContainer.className = 'flex gap-1 mt-1 md:hidden';
+                if (dailyIncome > 0) dotsContainer.innerHTML += `<div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>`;
+                if (dailyExpense > 0) dotsContainer.innerHTML += `<div class="w-1.5 h-1.5 rounded-full bg-rose-500"></div>`;
+                cell.appendChild(dotsContainer);
+
+                // DESKTOP: Text
+                const textContainer = document.createElement('div');
+                textContainer.className = 'hidden md:flex flex-col w-full mt-1 gap-0.5';
+                if (dailyIncome > 0) {
+                    textContainer.innerHTML += `<span class="text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1 rounded truncate">+${dailyIncome}</span>`;
                 }
-                if (hasIncome) {
-                    indicatorContainer.innerHTML += `<div class="w-2 h-2 rounded-full bg-green-500"></div>`;
+                if (dailyExpense > 0) {
+                    textContainer.innerHTML += `<span class="text-[10px] text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/30 px-1 rounded truncate">-${dailyExpense}</span>`;
                 }
-                dayEl.appendChild(indicatorContainer);
-                
-                // Show amount for desktop view only
-                const total = dayTxs.reduce((sum, t) => t.type === 'expense' ? sum - t.amount : sum + t.amount, 0);
-                const totalEl = document.createElement('span');
-                totalEl.className = `text-[10px] mt-auto mb-1 hidden sm:block font-medium ${total >= 0 ? 'text-green-600' : 'text-red-500'}`;
-                totalEl.textContent = total !== 0 ? Math.abs(total).toLocaleString() : '';
-                dayEl.appendChild(totalEl);
+                cell.appendChild(textContainer);
             }
 
             // Click Event
-            dayEl.addEventListener('click', () => {
-                // Remove active class from others
-                document.querySelectorAll('.calendar-day').forEach(el => el.classList.remove('bg-indigo-50', 'dark:bg-indigo-900/30'));
-                dayEl.classList.add('bg-indigo-50', 'dark:bg-indigo-900/30');
-                
-                showTransactionsForDate(dateKey, day);
-            });
+            cell.addEventListener('click', () => showDetails(dateStr, dailyTx));
 
-            calendarDays.appendChild(dayEl);
+            calendarBody.appendChild(cell);
         }
     }
 
-    async function fetchMonthData(uid, year, month) {
-        // Construct date range strings
-        const startStr = `${year}-${(month + 1).toString().padStart(2, '0')}-01`;
-        // Last day of month calculation
-        const lastDay = new Date(year, month + 1, 0).getDate();
-        const endStr = `${year}-${(month + 1).toString().padStart(2, '0')}-${lastDay}`;
-
-        const snapshot = await db.collection('users').doc(uid).collection('transactions')
-            .where('date', '>=', startStr)
-            .where('date', '<=', endStr)
-            .orderBy('date', 'desc')
-            .get();
-
-        const map = {};
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            if (!map[data.date]) map[data.date] = [];
-            map[data.date].push(data);
-        });
-        return map;
-    }
-
-    function showTransactionsForDate(dateKey, day) {
-        // Format readable date
-        const dateObj = new Date(dateKey);
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        selectedDateTitle.textContent = dateObj.toLocaleDateString('en-US', options);
+    // --- 3. SHOW DETAILS ---
+    function showDetails(dateStr, transactions) {
+        if(window.triggerHaptic) window.triggerHaptic(10);
         
-        dayTransactionsList.innerHTML = '';
+        detailsPanel.classList.remove('hidden');
         
-        const txs = transactionsMap[dateKey];
+        // Format Date Title
+        const dateObj = new Date(dateStr);
+        detailsTitle.innerText = dateObj.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' });
         
-        if (!txs || txs.length === 0) {
-            dayTransactionsList.innerHTML = `
-                <div class="flex flex-col items-center justify-center h-40 text-gray-400">
-                    <i class="fas fa-calendar-minus text-3xl mb-2"></i>
-                    <p>No transactions on this day.</p>
-                </div>`;
+        detailsList.innerHTML = '';
+
+        if (transactions.length === 0) {
+            detailsList.innerHTML = '<p class="text-sm text-gray-400 text-center py-2">No transactions.</p>';
             return;
         }
 
-        txs.forEach(t => {
-            const isIncome = t.type === 'income';
-            const colorClass = isIncome ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
-            const icon = isIncome ? 'fa-arrow-down' : 'fa-shopping-cart';
+        transactions.forEach(t => {
+            const isInc = t.type === 'income';
+            const color = isInc ? 'text-emerald-600' : 'text-gray-900 dark:text-white';
+            const sign = isInc ? '+' : '-';
             
             const html = `
-                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-100 dark:border-gray-600">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full ${isIncome ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'} flex items-center justify-center">
-                            <i class="fas ${icon} text-xs"></i>
-                        </div>
-                        <div>
-                            <p class="font-bold text-sm text-gray-800 dark:text-gray-200">${t.description}</p>
-                            <p class="text-xs text-gray-500">${t.category}</p>
-                        </div>
+                <div class="flex justify-between items-center p-2.5 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
+                    <div>
+                        <p class="text-sm font-bold text-gray-800 dark:text-gray-200">${t.description}</p>
+                        <p class="text-xs text-gray-500">${t.category}</p>
                     </div>
-                    <p class="font-bold ${colorClass}">₹${t.amount.toLocaleString()}</p>
+                    <span class="font-bold text-sm ${color}">${sign}₹${t.amount}</span>
                 </div>
             `;
-            dayTransactionsList.innerHTML += html;
+            detailsList.insertAdjacentHTML('beforeend', html);
         });
     }
+
+    // --- 4. UPDATE STATS ---
+    function updateStats() {
+        let totalInc = 0;
+        let totalExp = 0;
+        currentTransactions.forEach(t => {
+            if(t.type === 'income') totalInc += t.amount;
+            else totalExp += t.amount;
+        });
+        incomeEl.innerText = `₹${totalInc.toLocaleString()}`;
+        expenseEl.innerText = `₹${totalExp.toLocaleString()}`;
+    }
+
+    // --- 5. NAVIGATION ---
+    prevBtn.addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        fetchData();
+    });
+
+    nextBtn.addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        fetchData();
+    });
+
+    // Load initial
+    fetchData();
 }

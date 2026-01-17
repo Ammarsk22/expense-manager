@@ -1,110 +1,116 @@
+// --- TRANSACTION TEMPLATES ---
+// Save frequent transactions for 1-click entry
+
+const TemplateManager = {
+    
+    // 1. INITIALIZE (Load templates into horizontal scroll list)
+    init: function(userId) {
+        const list = document.getElementById('template-list');
+        if (!list) return;
+
+        // Fetch templates
+        db.collection('users').doc(userId).collection('templates').orderBy('frequency', 'desc').limit(10)
+            .onSnapshot(snapshot => {
+                list.innerHTML = '';
+                
+                if (snapshot.empty) {
+                    list.innerHTML = `
+                        <button onclick="TemplateManager.createDefault()" class="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-800 border border-dashed border-gray-300 dark:border-gray-600 rounded-2xl text-xs font-medium text-gray-400 hover:text-indigo-500 hover:border-indigo-500 transition-all shrink-0">
+                            <i class="fas fa-plus"></i> Save frequent txns here
+                        </button>
+                    `;
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const t = doc.data();
+                    const el = document.createElement('button');
+                    el.className = 'flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-sm text-xs font-medium text-gray-700 dark:text-gray-200 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:border-indigo-200 transition-all shrink-0 active:scale-95';
+                    
+                    // Icon logic
+                    let icon = 'fas fa-bookmark';
+                    if (t.category === 'Food') icon = 'fas fa-utensils';
+                    if (t.category === 'Travel') icon = 'fas fa-car';
+                    if (t.category === 'Shopping') icon = 'fas fa-shopping-bag';
+                    if (t.category === 'Bills') icon = 'fas fa-file-invoice';
+
+                    el.innerHTML = `<i class="${icon} text-indigo-500"></i> ${t.name}`;
+                    
+                    el.addEventListener('click', () => {
+                        this.applyTemplate(t);
+                    });
+                    
+                    list.appendChild(el);
+                });
+            });
+    },
+
+    // 2. APPLY TEMPLATE TO FORM
+    applyTemplate: function(t) {
+        if(window.triggerHaptic) window.triggerHaptic(20);
+
+        document.getElementById('amount').value = t.amount || '';
+        document.getElementById('description').value = t.name;
+        document.getElementById('type').value = t.type;
+        
+        // Handle Category Select
+        const catSelect = document.getElementById('category');
+        for (let i = 0; i < catSelect.options.length; i++) {
+            if (catSelect.options[i].value === t.category || catSelect.options[i].text === t.category) {
+                catSelect.selectedIndex = i;
+                break;
+            }
+        }
+
+        // Show toast
+        if(typeof showToast === 'function') showToast("Template applied!", "info");
+    },
+
+    // 3. SAVE NEW TEMPLATE (Called when submitting form if checkbox checked)
+    save: async function(userId, data) {
+        try {
+            // Check if exists
+            const existing = await db.collection('users').doc(userId).collection('templates')
+                .where('name', '==', data.description)
+                .limit(1).get();
+
+            if (!existing.empty) {
+                // Update frequency
+                const docId = existing.docs[0].id;
+                await db.collection('users').doc(userId).collection('templates').doc(docId).update({
+                    frequency: firebase.firestore.FieldValue.increment(1),
+                    amount: data.amount // Update amount to latest
+                });
+            } else {
+                // Create New
+                await db.collection('users').doc(userId).collection('templates').add({
+                    name: data.description,
+                    amount: data.amount,
+                    category: data.category,
+                    type: data.type,
+                    frequency: 1,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+        } catch (e) {
+            console.error("Error saving template", e);
+        }
+    },
+
+    // 4. HELPER: CREATE DEFAULT TEMPLATE
+    createDefault: function() {
+        if(typeof showToast === 'function') showToast("Tip: Check 'Save as Template' when adding a transaction.", "info");
+    }
+};
+
+// Auto-init on load if user is logged in
 document.addEventListener('DOMContentLoaded', () => {
     auth.onAuthStateChanged(user => {
         if (user) {
-            initializeTemplates(user.uid);
+            TemplateManager.init(user.uid);
         }
     });
 });
 
-function initializeTemplates(userId) {
-    const templateList = document.getElementById('template-list');
-    const templatesRef = db.collection('users').doc(userId).collection('templates');
-
-    // --- REAL-TIME LISTENER ---
-    templatesRef.orderBy('createdAt', 'desc').onSnapshot(snapshot => {
-        templateList.innerHTML = '';
-
-        if (snapshot.empty) {
-            templateList.innerHTML = '<p class="text-xs text-gray-400 dark:text-gray-500 italic whitespace-nowrap">No templates yet. Check "Save as Template" when adding a transaction.</p>';
-            return;
-        }
-
-        snapshot.forEach(doc => {
-            const t = doc.data();
-            const isIncome = t.type === 'income';
-            
-            // Icon and Colors based on type
-            const iconClass = isIncome ? 'fa-arrow-up text-green-500' : 'fa-arrow-down text-red-500';
-            const borderClass = isIncome ? 'hover:border-green-400' : 'hover:border-red-400';
-            
-            // Create Template Chip
-            const btn = document.createElement('div');
-            btn.className = `group flex items-center shrink-0 cursor-pointer bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-full px-3 py-1.5 text-sm shadow-sm ${borderClass} transition-all select-none`;
-            
-            btn.innerHTML = `
-                <i class="fas ${iconClass} mr-2 text-xs"></i>
-                <span class="text-gray-700 dark:text-gray-200 font-medium mr-2 whitespace-nowrap">${t.description}</span>
-                <span class="text-xs text-gray-400 group-hover:text-red-500 delete-template-btn ml-1 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors" data-id="${doc.id}" title="Delete Template">
-                    <i class="fas fa-times"></i>
-                </span>
-            `;
-
-            // 1. Click on the chip body -> Fills the form
-            btn.addEventListener('click', (e) => {
-                // Don't trigger fill if the delete button was clicked
-                if (e.target.closest('.delete-template-btn')) return; 
-                fillTransactionForm(t);
-            });
-
-            // 2. Click on 'x' -> Deletes the template
-            const deleteBtn = btn.querySelector('.delete-template-btn');
-            deleteBtn.addEventListener('click', (e) => {
-                e.stopPropagation(); // Stop bubble up
-                if(confirm('Delete this template?')) {
-                    templatesRef.doc(doc.id).delete().catch(err => {
-                        console.error("Error removing template: ", err);
-                    });
-                }
-            });
-
-            templateList.appendChild(btn);
-        });
-    });
-}
-
-function fillTransactionForm(data) {
-    // Fill basic text/number fields
-    const descInput = document.getElementById('description');
-    const amountInput = document.getElementById('amount');
-    const typeSelect = document.getElementById('type');
-    
-    if(descInput) descInput.value = data.description;
-    if(amountInput) amountInput.value = data.amount;
-    if(typeSelect) typeSelect.value = data.type;
-    
-    // Handle Select Dropdowns (Account & Category)
-    // We need to match values even if they aren't exactly the same string/value pair
-    setSelectValue('account', data.account);
-    setSelectValue('category', data.category);
-
-    // Visual Feedback (Flash Effect)
-    const form = document.getElementById('transaction-form');
-    if(form) {
-        // Add a flash class
-        form.classList.add('ring-2', 'ring-indigo-500', 'bg-indigo-50', 'dark:bg-gray-700');
-        
-        // Remove it after animation
-        setTimeout(() => {
-            form.classList.remove('ring-2', 'ring-indigo-500', 'bg-indigo-50', 'dark:bg-gray-700');
-        }, 600);
-    }
-}
-
-// Helper to set select box values robustly
-function setSelectValue(id, value) {
-    const select = document.getElementById(id);
-    if (!select) return;
-
-    // Try setting directly
-    select.value = value;
-
-    // If that didn't work (e.g. value mismatch), try matching text content
-    if (select.selectedIndex === -1) {
-        for (let i = 0; i < select.options.length; i++) {
-            if (select.options[i].text.includes(value)) {
-                select.selectedIndex = i;
-                break;
-            }
-        }
-    }
-}
+// Expose
+window.TemplateManager = TemplateManager;

@@ -1,175 +1,137 @@
-/**
- * Main JavaScript File
- * Handles: Global Navigation, Sidebar, Haptic Feedback, Swipe Gestures, and PWA Features
- */
-
-// --- 1. GLOBAL FUNCTIONS (Available on all pages) ---
-
-window.openSidebarMenu = function() {
-    if (navigator.vibrate) navigator.vibrate(15); // Haptic
+document.addEventListener('DOMContentLoaded', () => {
     
+    // --- 1. GLOBAL UI ELEMENTS ---
     const sidebar = document.getElementById('sidebar');
-    const backdrop = document.getElementById('sidebar-backdrop');
+    const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+    const menuBtn = document.getElementById('menu-button');
+    const logoutBtn = document.getElementById('logout-button');
+    const ptrSpinner = document.getElementById('ptr-spinner');
     
-    // Fix: Create backdrop if it doesn't exist (Dynamic fix for other pages)
-    // We set z-40 so it stays BEHIND the sidebar (which is usually z-50 or z-60)
-    if (!backdrop && sidebar) {
-        const newBackdrop = document.createElement('div');
-        newBackdrop.id = 'sidebar-backdrop';
-        newBackdrop.className = 'fixed inset-0 bg-black/50 z-40 hidden md:hidden transition-opacity';
-        newBackdrop.onclick = window.closeSidebarMenu;
-        document.body.appendChild(newBackdrop);
-        
-        // Small delay to allow DOM update
-        setTimeout(() => window.openSidebarMenu(), 10);
-        return;
-    }
-
-    if (sidebar) {
-        sidebar.classList.remove('-translate-x-full');
-        // Fix: Force Sidebar to be on top of everything
-        sidebar.classList.add('z-[100]'); 
-    }
-    
-    if (backdrop) {
-        backdrop.classList.remove('hidden');
-        setTimeout(() => backdrop.classList.remove('opacity-0'), 10);
-    }
-};
-
-window.closeSidebarMenu = function() {
-    if (navigator.vibrate) navigator.vibrate(15); // Haptic
-
-    const sidebar = document.getElementById('sidebar');
-    const backdrop = document.getElementById('sidebar-backdrop');
-    
-    if (sidebar) {
-        sidebar.classList.add('-translate-x-full');
-        // Reset z-index after animation finishes
-        setTimeout(() => sidebar.classList.remove('z-[100]'), 300);
-    }
-    
-    if (backdrop) {
-        backdrop.classList.add('opacity-0');
-        setTimeout(() => backdrop.classList.add('hidden'), 300);
-    }
-};
-
-// --- 2. DOM LOADED LOGIC ---
-
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // A. Apply Haptic Feedback to ALL Navigation Links
-    // This makes sure vibration works on Calendar, Settings, etc.
-    const allNavLinks = document.querySelectorAll('nav a, .md\\:hidden a, button, .btn');
-    allNavLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            if (navigator.vibrate) navigator.vibrate(10);
-        });
+    // --- 2. AUTH STATE & GREETING ---
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            updateGreeting(user);
+            // Load specific page logic if functions exist
+            if (typeof loadTransactions === 'function') loadTransactions(user.uid);
+            if (typeof updateDashboard === 'function') updateDashboard(user.uid);
+            if (typeof NotificationManager !== 'undefined') NotificationManager.checkDueItems(user.uid);
+        } else {
+            // Redirect to login if not on login page
+            if (!window.location.pathname.includes('login.html')) {
+                window.location.href = 'login.html';
+            }
+        }
     });
 
-    // B. Shortcuts & Deep Link Handler
-    const urlParams = new URLSearchParams(window.location.search);
-    const action = urlParams.get('action');
-
-    if (action) {
-        window.history.replaceState({}, document.title, window.location.pathname);
-        setTimeout(() => {
-            if (action === 'add') {
-                const form = document.getElementById('transaction-form');
-                if (form) {
-                    form.scrollIntoView({ behavior: 'smooth' });
-                    form.classList.add('ring-2', 'ring-indigo-500', 'rounded-lg');
-                    setTimeout(() => form.classList.remove('ring-2', 'ring-indigo-500', 'rounded-lg'), 2000);
-                }
-            } else if (action === 'scan') {
-                const scanBtn = document.getElementById('scan-btn');
-                if (scanBtn) scanBtn.click();
-            }
-        }, 500);
+    function updateGreeting(user) {
+        const titleEl = document.getElementById('greeting-title');
+        const subEl = document.getElementById('user-greeting');
+        
+        if (titleEl) {
+            const hour = new Date().getHours();
+            let greeting = "Good Morning";
+            if (hour >= 12 && hour < 17) greeting = "Good Afternoon";
+            else if (hour >= 17) greeting = "Good Evening";
+            
+            // Get first name
+            const firstName = user.displayName ? user.displayName.split(' ')[0] : 'User';
+            titleEl.innerText = `${greeting}, ${firstName}!`;
+        }
     }
 
-    // C. Legacy Menu Button Handler (Safe Check)
-    const menuButton = document.getElementById('menu-button');
-    if (menuButton) {
-        // Remove old listeners to avoid duplicates, use new Global function
-        menuButton.replaceWith(menuButton.cloneNode(true));
-        document.getElementById('menu-button').addEventListener('click', (e) => {
-            e.stopPropagation();
-            window.openSidebarMenu();
+    // --- 3. SIDEBAR NAVIGATION (Mobile) ---
+    if (menuBtn && sidebar && sidebarBackdrop) {
+        menuBtn.addEventListener('click', () => {
+            sidebar.classList.remove('-translate-x-full');
+            sidebarBackdrop.classList.remove('hidden');
+            if(window.triggerHaptic) window.triggerHaptic(10);
+        });
+
+        const closeSidebar = () => {
+            sidebar.classList.add('-translate-x-full');
+            sidebarBackdrop.classList.add('hidden');
+        };
+
+        sidebarBackdrop.addEventListener('click', closeSidebar);
+        window.closeSidebarMenu = closeSidebar; // Expose globally
+    }
+
+    // --- 4. LOGOUT HANDLER ---
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            if (confirm("Are you sure you want to log out?")) {
+                auth.signOut().then(() => window.location.href = 'login.html');
+            }
         });
     }
 
-    // D. Edge Swipe to Open Sidebar (Works on ALL pages)
-    let touchStartX = 0;
+    // --- 5. PULL-TO-REFRESH LOGIC ---
     let touchStartY = 0;
-    const EDGE_THRESHOLD = 30; 
-    const SWIPE_THRESHOLD = 70;
-
-    document.addEventListener('touchstart', (e) => {
-        touchStartX = e.changedTouches[0].screenX;
-        touchStartY = e.changedTouches[0].screenY;
-    }, { passive: true });
-
-    document.addEventListener('touchend', (e) => {
-        const touchEndX = e.changedTouches[0].screenX;
-        const touchEndY = e.changedTouches[0].screenY;
-        
-        if (touchStartX < EDGE_THRESHOLD && 
-            touchEndX > touchStartX + SWIPE_THRESHOLD && 
-            Math.abs(touchEndY - touchStartY) < 50) {
-            
-            window.openSidebarMenu();
-        }
-    }, { passive: true });
-
-    // E. Pull-to-Refresh Logic (Generic for any page with main content)
-    const mainContent = document.querySelector('main'); // Selects <main> on any page
-    const spinner = document.getElementById('ptr-spinner');
+    const mainContent = document.getElementById('main-content');
     
-    // Only run if spinner exists on the page
-    if(mainContent && spinner) {
-        let pStart = {x: 0, y:0};
-        let pCurrent = {x: 0, y:0};
-        let isDragging = false;
-
+    if (mainContent && ptrSpinner) {
         mainContent.addEventListener('touchstart', e => {
-            if (mainContent.scrollTop <= 0) {
-                pStart.x = e.touches[0].screenX;
-                pStart.y = e.touches[0].screenY;
-                isDragging = true;
+            if (mainContent.scrollTop === 0) {
+                touchStartY = e.touches[0].clientY;
             }
-        }, {passive: true});
+        }, { passive: true });
 
         mainContent.addEventListener('touchmove', e => {
-            if (!isDragging) return;
-            pCurrent.y = e.touches[0].screenY;
-            let diff = pCurrent.y - pStart.y;
-            
-            if (diff > 0 && mainContent.scrollTop <= 0) {
-                 const move = Math.min(diff * 0.5, 150); 
-                 spinner.style.transform = `translateY(${move}px) translateX(-50%)`;
-                 if(diff > 50) {
-                     spinner.classList.add('visible');
-                     spinner.style.opacity = '1';
-                 }
+            const touchY = e.touches[0].clientY;
+            const pullDistance = touchY - touchStartY;
+
+            if (mainContent.scrollTop === 0 && pullDistance > 0) {
+                if (pullDistance > 60) {
+                    ptrSpinner.classList.add('visible');
+                    ptrSpinner.style.transform = `translateX(-50%) rotate(${pullDistance * 2}deg)`;
+                }
             }
-        }, {passive: true});
+        }, { passive: true });
 
         mainContent.addEventListener('touchend', e => {
-            if (!isDragging) return;
-            isDragging = false;
-            pCurrent.y = e.changedTouches[0].screenY;
-            let diff = pCurrent.y - pStart.y;
-            spinner.style.transform = 'translateX(-50%)'; 
-            
-            if (diff > 80 && mainContent.scrollTop <= 0) {
-                 if (navigator.vibrate) navigator.vibrate(30);
-                 setTimeout(() => window.location.reload(), 500);
+            const touchY = e.changedTouches[0].clientY;
+            if (mainContent.scrollTop === 0 && (touchY - touchStartY) > 80) {
+                // Trigger Refresh
+                performRefresh();
             } else {
-                 spinner.classList.remove('visible');
-                 spinner.style.opacity = '0';
+                ptrSpinner.classList.remove('visible');
             }
+            touchStartY = 0;
+        });
+    }
+
+    async function performRefresh() {
+        if(window.triggerHaptic) window.triggerHaptic(20);
+        
+        // Reload Data
+        const user = auth.currentUser;
+        if (user) {
+            if (typeof loadTransactions === 'function') await loadTransactions(user.uid);
+            if (typeof updateDashboard === 'function') await updateDashboard(user.uid);
+        }
+
+        setTimeout(() => {
+            ptrSpinner.classList.remove('visible');
+            if(typeof showToast === 'function') showToast("Dashboard Updated", "success");
+        }, 800);
+    }
+
+    // --- 6. GLOBAL UTILITIES ---
+    
+    // Haptic Feedback (Vibration)
+    window.triggerHaptic = function(duration = 10) {
+        const isHapticEnabled = localStorage.getItem('hapticEnabled') !== 'false';
+        if (isHapticEnabled && navigator.vibrate) {
+            navigator.vibrate(duration);
+        }
+    };
+
+    // --- 7. SERVICE WORKER REGISTRATION (PWA) ---
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(reg => console.log('SW registered:', reg.scope))
+                .catch(err => console.log('SW registration failed:', err));
         });
     }
 });

@@ -1,149 +1,129 @@
-/**
- * FinTrack Notifications Module
- * Handles permission requests and due date checks
- */
+// --- NOTIFICATION MANAGER ---
+// Handles both In-App Toasts and Native System Notifications
 
-const Notifications = {
-    init() {
-        this.checkPermission();
-        this.setupSettingsListener();
+const NotificationManager = {
+    
+    // 1. INITIALIZE (Request Permissions)
+    init: function() {
+        if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+            // Ask for permission silently or on first interaction
+            // We usually wait for user action, but can check status here
+        }
         
-        // Check for reminders if enabled
-        if (this.isEnabled()) {
-            this.checkForDueItems();
+        // Create Toast Container if not exists
+        if (!document.getElementById('toast-container')) {
+            const container = document.createElement('div');
+            container.id = 'toast-container';
+            container.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 z-[70] flex flex-col gap-2 w-full max-w-xs pointer-events-none';
+            document.body.appendChild(container);
         }
     },
 
-    // 1. Permission Logic
-    async requestPermission() {
-        if (!('Notification' in window)) {
-            alert('This browser does not support notifications.');
-            return false;
+    // 2. SHOW IN-APP TOAST (The colorful popups)
+    showToast: function(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        // Styles based on type
+        let bgClass, icon;
+        switch (type) {
+            case 'success':
+                bgClass = 'bg-white dark:bg-gray-800 border-l-4 border-emerald-500';
+                icon = '<i class="fas fa-check-circle text-emerald-500 text-xl"></i>';
+                break;
+            case 'error':
+                bgClass = 'bg-white dark:bg-gray-800 border-l-4 border-red-500';
+                icon = '<i class="fas fa-times-circle text-red-500 text-xl"></i>';
+                break;
+            case 'warning':
+                bgClass = 'bg-white dark:bg-gray-800 border-l-4 border-amber-500';
+                icon = '<i class="fas fa-exclamation-circle text-amber-500 text-xl"></i>';
+                break;
+            default:
+                bgClass = 'bg-white dark:bg-gray-800 border-l-4 border-blue-500';
+                icon = '<i class="fas fa-info-circle text-blue-500 text-xl"></i>';
         }
 
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-            localStorage.setItem('fintrack_notifications', 'true');
-            this.send('Notifications Enabled', 'You will now receive reminders for bills and debts.');
-            return true;
-        } else {
-            localStorage.setItem('fintrack_notifications', 'false');
-            alert('Permission denied. Enable notifications in browser settings.');
-            return false;
-        }
+        // Create Element
+        const toast = document.createElement('div');
+        toast.className = `${bgClass} shadow-lg rounded-r-xl p-4 flex items-center gap-3 transform -translate-y-10 opacity-0 transition-all duration-300 pointer-events-auto min-w-[300px]`;
+        toast.innerHTML = `
+            ${icon}
+            <div class="flex-1">
+                <p class="text-sm font-medium text-gray-800 dark:text-white leading-tight">${message}</p>
+            </div>
+        `;
+
+        container.appendChild(toast);
+
+        // Haptic Feedback
+        if(window.triggerHaptic) window.triggerHaptic(type === 'error' ? 50 : 20);
+
+        // Animate In
+        requestAnimationFrame(() => {
+            toast.classList.remove('-translate-y-10', 'opacity-0');
+        });
+
+        // Remove after 3 seconds
+        setTimeout(() => {
+            toast.classList.add('-translate-y-10', 'opacity-0');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     },
 
-    isEnabled() {
-        return localStorage.getItem('fintrack_notifications') === 'true' && Notification.permission === 'granted';
-    },
+    // 3. SEND NATIVE NOTIFICATION (System Level)
+    sendSystemNotification: function(title, body) {
+        if (!("Notification" in window)) return;
 
-    checkPermission() {
-        const toggle = document.getElementById('notification-toggle');
-        if (toggle) {
-            toggle.checked = this.isEnabled();
-        }
-    },
-
-    setupSettingsListener() {
-        const toggle = document.getElementById('notification-toggle');
-        if (toggle) {
-            toggle.addEventListener('change', (e) => {
-                if (e.target.checked) {
-                    this.requestPermission();
-                } else {
-                    localStorage.setItem('fintrack_notifications', 'false');
+        if (Notification.permission === "granted") {
+            new Notification(title, {
+                body: body,
+                icon: 'assets/img/icon-192.png',
+                badge: 'assets/img/icon-192.png',
+                vibrate: [200, 100, 200]
+            });
+        } else if (Notification.permission !== "denied") {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    this.sendSystemNotification(title, body);
                 }
             });
         }
     },
 
-    // 2. Trigger Notification
-    send(title, body) {
-        if (Notification.permission === 'granted') {
-            // Try Service Worker first (Better for Mobile)
-            if ('serviceWorker' in navigator && navigator.serviceWorker.ready) {
-                navigator.serviceWorker.ready.then(registration => {
-                    registration.showNotification(title, {
-                        body: body,
-                        icon: 'assets/img/icon-192.png',
-                        vibrate: [200, 100, 200],
-                        badge: 'assets/img/icon-192.png'
-                    });
-                });
-            } else {
-                // Fallback to standard API
-                new Notification(title, {
-                    body: body,
-                    icon: 'assets/img/icon-192.png'
-                });
-            }
-        }
-    },
+    // 4. CHECK REMINDERS (Called on App Load)
+    checkDueItems: async function(userId) {
+        // Only run once per session to avoid spam
+        if (sessionStorage.getItem('checked_reminders')) return;
+        sessionStorage.setItem('checked_reminders', 'true');
 
-    // 3. Logic to Check Database for Due Dates
-    async checkForDueItems() {
-        const user = firebase.auth().currentUser;
-        if (!user) return;
-
-        // Prevent spamming: Check only once per day
-        const lastCheck = localStorage.getItem('last_notification_check');
-        const todayStr = new Date().toISOString().split('T')[0];
-
-        if (lastCheck === todayStr) {
-            console.log("Reminders already checked today.");
-            return;
-        }
-
-        // Calculate Dates (Today & Tomorrow)
-        const today = new Date();
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-
-        const todayISO = today.toISOString().split('T')[0];
-        const tomorrowISO = tomorrow.toISOString().split('T')[0];
-
-        let alerts = [];
-
+        // A. Check Subscriptions
         try {
-            // A. Check Subscriptions
-            const subsSnapshot = await db.collection('users').doc(user.uid).collection('recurring').get();
-            subsSnapshot.forEach(doc => {
-                const data = doc.data();
-                if (data.nextDueDate === todayISO) {
-                    alerts.push(`Subscription Due Today: ${data.name} (₹${data.amount})`);
-                } else if (data.nextDueDate === tomorrowISO) {
-                    alerts.push(`Subscription Due Tomorrow: ${data.name} (₹${data.amount})`);
-                }
-            });
+            const today = new Date().toISOString().split('T')[0];
+            const subsSnapshot = await db.collection('users').doc(userId).collection('recurring')
+                .where('nextDue', '==', today)
+                .where('active', '==', true)
+                .get();
 
-            // B. Check Debts (To Receive / To Pay)
-            const debtsSnapshot = await db.collection('users').doc(user.uid).collection('debts').get();
-            debtsSnapshot.forEach(doc => {
-                const data = doc.data();
-                // Check if 'due-date' field exists (we added it in Debt Manager)
-                if (data.date === todayISO) { // Assuming 'date' or specific 'dueDate' field
-                     // Simple check on created date for now, or update Debt logic to have strict due dates
-                }
-            });
-
-            // C. Send Notifications
-            if (alerts.length > 0) {
-                this.send('FinTrack Reminders 🔔', alerts.join('\n'));
-                localStorage.setItem('last_notification_check', todayStr);
+            if (!subsSnapshot.empty) {
+                subsSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    const msg = `Reminder: ${data.name} payment of ₹${data.amount} is due today!`;
+                    
+                    this.showToast(msg, 'warning');
+                    this.sendSystemNotification("Bill Due Today", msg);
+                });
             }
-
-        } catch (error) {
-            console.error("Error checking reminders:", error);
-        }
+        } catch (e) { console.error("Reminder Check Error", e); }
     }
 };
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    // Wait for Firebase Auth
-    setTimeout(() => {
-        if (firebase.auth().currentUser) {
-            Notifications.init();
-        }
-    }, 2000);
+    NotificationManager.init();
 });
+
+// Expose globally
+window.NotificationManager = NotificationManager;
+// Alias for easier usage
+window.showToast = NotificationManager.showToast.bind(NotificationManager);

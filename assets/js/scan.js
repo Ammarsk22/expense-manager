@@ -1,156 +1,206 @@
+// --- RECEIPT SCANNER ENGINE (OCR) ---
+// Uses Tesseract.js to extract text from images
+
 document.addEventListener('DOMContentLoaded', () => {
     const scanBtn = document.getElementById('scan-btn');
-    const closeBtn = document.getElementById('close-scan');
-    const fileInput = document.getElementById('scan-input');
-    const modal = document.getElementById('scan-modal');
-    const preview = document.getElementById('scan-preview');
-    const anim = document.getElementById('scan-anim');
-    const loader = document.getElementById('scan-loader');
-    const status = document.getElementById('scan-status');
+    const scanInput = document.getElementById('scan-input');
+    const scanModal = document.getElementById('scan-modal');
+    const closeScanBtn = document.getElementById('close-scan');
+    const previewImg = document.getElementById('scan-preview');
+    const scanAnim = document.getElementById('scan-anim');
+    const scanLoader = document.getElementById('scan-loader');
+    const scanStatus = document.getElementById('scan-status');
+    
+    // Target Fields
+    const amountInput = document.getElementById('amount');
+    const dateInput = document.getElementById('date');
+    const descInput = document.getElementById('description');
+    const catSelect = document.getElementById('category');
 
-    let worker = null;
+    if (!scanBtn || !scanInput) return;
 
-    if (scanBtn && fileInput && modal) {
-        
-        // --- LAZY LOAD TESSERACT & OPEN MODAL ---
-        scanBtn.addEventListener('click', () => {
-            if (navigator.vibrate) navigator.vibrate(15);
-            
-            // Check if Tesseract is loaded
-            if (typeof Tesseract === 'undefined') {
-                // Show loading state while script loads
-                const originalText = status ? status.innerText : '';
-                if(status) status.innerText = "Loading scanner engine...";
-                
-                const script = document.createElement('script');
-                script.src = 'https://unpkg.com/tesseract.js@v2.1.0/dist/tesseract.min.js';
-                
-                script.onload = () => {
-                    if(status) status.innerText = originalText;
-                    fileInput.click();
-                };
-                
-                script.onerror = () => {
-                    alert("Failed to load scanner. Please check internet connection.");
-                };
-                
-                document.head.appendChild(script);
-            } else {
-                // Already loaded, just open input
-                fileInput.click();
-            }
-        });
+    // 1. TRIGGER CAMERA / FILE PICKER
+    scanBtn.addEventListener('click', () => {
+        scanInput.click();
+    });
 
-        fileInput.addEventListener('change', (e) => {
+    // 2. HANDLE FILE SELECTION
+    scanInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    preview.src = e.target.result;
-                    modal.classList.remove('hidden');
-                    anim.classList.remove('hidden');
-                    loader.classList.remove('hidden');
-                    status.innerText = "Initializing OCR...";
-                    processImage(file);
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
-        if(closeBtn) {
-            closeBtn.addEventListener('click', () => {
-                modal.classList.add('hidden');
-                fileInput.value = ''; 
-                preview.src = '';
-                if(worker) {
-                    worker.terminate();
-                    worker = null;
-                }
-            });
+            
+            // Show UI
+            scanModal.classList.remove('hidden');
+            scanModal.classList.add('flex');
+            
+            // Display Preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImg.src = e.target.result;
+                startScanning(e.target.result);
+            };
+            reader.readAsDataURL(file);
         }
+    });
+
+    // 3. CLOSE MODAL
+    if (closeScanBtn) {
+        closeScanBtn.addEventListener('click', () => {
+            resetScanner();
+        });
     }
 
-    async function processImage(file) {
+    function resetScanner() {
+        scanModal.classList.add('hidden');
+        scanModal.classList.remove('flex');
+        scanAnim.classList.add('hidden');
+        scanLoader.classList.add('hidden');
+        scanStatus.innerText = "Ready to scan";
+        previewImg.src = "";
+        scanInput.value = ''; // Allow re-scanning same file
+    }
+
+    // 4. CORE SCANNING LOGIC
+    async function startScanning(imageSrc) {
+        // UI State: Scanning
+        scanAnim.classList.remove('hidden');
+        scanLoader.classList.remove('hidden');
+        scanStatus.innerText = "Initializing OCR Engine...";
+        
         try {
-            status.innerText = "Recognizing text...";
+            // Check if Tesseract is loaded
+            if (typeof Tesseract === 'undefined') {
+                throw new Error("Tesseract.js library not loaded. Please check internet connection.");
+            }
+
+            scanStatus.innerText = "Reading text... (This may take a few seconds)";
             
-            // Tesseract worker creation
-            worker = Tesseract.createWorker({
-                logger: m => {
-                    if(m.status === 'recognizing text') {
-                        status.innerText = `Scanning... ${Math.round(m.progress * 100)}%`;
+            // Perform OCR
+            const result = await Tesseract.recognize(
+                imageSrc,
+                'eng',
+                {
+                    logger: m => {
+                        if (m.status === 'recognizing text') {
+                            scanStatus.innerText = `Scanning... ${Math.round(m.progress * 100)}%`;
+                        }
                     }
                 }
-            });
+            );
 
-            await worker.load();
-            await worker.loadLanguage('eng');
-            await worker.initialize('eng');
+            const text = result.data.text;
+            console.log("Scanned Text:", text); // Debugging
             
-            const { data: { text } } = await worker.recognize(file);
+            scanStatus.innerText = "Analyzing data...";
             
-            status.innerText = "Processing data...";
-            parseReceiptData(text);
+            // Extract Data using Regex
+            const data = extractData(text);
             
-            await worker.terminate();
-            worker = null;
-            
-            // Close modal after delay
+            // Auto-fill Form
+            applyScannedData(data);
+
+            // Success UI
+            scanStatus.innerText = "Done! Receipt processed.";
+            if(window.triggerHaptic) window.triggerHaptic(50);
+
             setTimeout(() => {
-                modal.classList.add('hidden');
-                fileInput.value = '';
-            }, 1000);
+                resetScanner();
+            }, 1500);
 
         } catch (error) {
             console.error(error);
-            status.innerText = "Error scanning. Try again.";
-            anim.classList.add('hidden');
-            loader.classList.add('hidden');
+            scanStatus.innerText = "Error: " + error.message;
+            scanAnim.classList.add('hidden');
+            scanLoader.classList.add('hidden');
         }
     }
 
-    function parseReceiptData(text) {
+    // 5. PARSING LOGIC
+    function extractData(text) {
         const lines = text.split('\n');
-        let total = 0;
+        let amount = null;
         let date = null;
-        let merchant = "Scanned Receipt";
+        let merchant = null;
 
-        // Simple Heuristics
-        const amountRegex = /(\d+\.\d{2})/;
-        const dateRegex = /(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/;
+        // Clean text (keep numbers, letters, dots, currency symbols)
+        const cleanText = text.replace(/[^a-zA-Z0-9\s.\-:\/₹$]/g, '');
 
-        for (let line of lines) {
-            // Find biggest amount
-            const matchAmount = line.match(amountRegex);
-            if (matchAmount) {
-                const val = parseFloat(matchAmount[1]);
-                if (val > total) total = val;
-            }
-
-            // Find date
-            if (!date) {
-                const matchDate = line.match(dateRegex);
-                if (matchDate) {
-                    // Try to parse date (naive)
-                    try {
-                        const d = new Date(matchDate[1]);
-                        if(!isNaN(d.getTime())) date = d.toISOString().split('T')[0];
-                    } catch(e) {}
-                }
-            }
-            
-            // Guess merchant (first non-empty line usually)
-            if(merchant === "Scanned Receipt" && line.trim().length > 3 && !line.match(/\d/)) {
-                merchant = line.trim();
-            }
+        // A. FIND AMOUNT
+        // Regex to find currency-like patterns (e.g., 1,200.50 or 50.00)
+        // We look for the LARGEST number in the text, assuming it's the Total
+        const amountRegex = /(\d{1,3}(,\d{3})*(\.\d{2}))/g;
+        const numbers = cleanText.match(amountRegex);
+        if (numbers) {
+            // Convert strings to floats and find max
+            const floats = numbers.map(n => parseFloat(n.replace(/,/g, '')));
+            amount = Math.max(...floats);
         }
 
-        // Fill Form
-        document.getElementById('amount').value = total || '';
-        document.getElementById('description').value = merchant;
-        if(date) document.getElementById('date').value = date;
-        
-        // Haptic feedback
-        if(navigator.vibrate) navigator.vibrate([50, 50, 50]);
+        // B. FIND DATE
+        // Formats: DD/MM/YYYY, YYYY-MM-DD, DD-MM-YYYY
+        const dateRegex = /(\d{4}-\d{2}-\d{2})|(\d{2}\/\d{2}\/\d{4})|(\d{2}-\d{2}-\d{4})/g;
+        const dates = cleanText.match(dateRegex);
+        if (dates) {
+            let rawDate = dates[0];
+            // Standardize to YYYY-MM-DD
+            if (rawDate.includes('/')) {
+                const [d, m, y] = rawDate.split('/');
+                date = `${y}-${m}-${d}`;
+            } else if (rawDate.includes('-') && rawDate.split('-')[0].length === 2) {
+                const [d, m, y] = rawDate.split('-');
+                date = `${y}-${m}-${d}`;
+            } else {
+                date = rawDate;
+            }
+        } else {
+            // Default to today if not found
+            date = new Date().toISOString().split('T')[0];
+        }
+
+        // C. FIND MERCHANT
+        // Heuristic: First line that isn't a "Welcome" or "Receipt" header
+        const ignoreWords = ['welcome', 'receipt', 'invoice', 'tax', 'total', 'bill', 'copy', 'gst', 'tin'];
+        for (let line of lines) {
+            line = line.trim();
+            if (line.length > 3 && !ignoreWords.some(w => line.toLowerCase().includes(w)) && !/\d/.test(line)) {
+                merchant = window.AI ? window.AI.translate(line) : line;
+                break;
+            }
+        }
+        if (!merchant) merchant = "Scanned Receipt";
+
+        return { amount, date, merchant };
+    }
+
+    // 6. AUTO-FILL FORM
+    function applyScannedData(data) {
+        if (data.amount) {
+            amountInput.value = data.amount;
+            // Flash Effect
+            amountInput.classList.add('bg-green-100', 'dark:bg-green-900');
+            setTimeout(() => amountInput.classList.remove('bg-green-100', 'dark:bg-green-900'), 1000);
+        }
+
+        if (data.date) {
+            dateInput.value = data.date;
+        }
+
+        if (data.merchant) {
+            descInput.value = data.merchant;
+            
+            // AI Categorization
+            if (window.AI && window.AI.predictCategory) {
+                const category = window.AI.predictCategory(data.merchant);
+                if (category) {
+                    // Select option in dropdown
+                    for(let i=0; i<catSelect.options.length; i++) {
+                        if(catSelect.options[i].text === category) {
+                            catSelect.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
     }
 });
