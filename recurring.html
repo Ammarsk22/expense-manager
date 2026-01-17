@@ -2,13 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <title>Subscriptions | FinTrack</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4F46E5">
-    <link rel="apple-touch-icon" href="assets/img/icon-192.png">
     
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="assets/img/icon-192.png">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -16,174 +19,159 @@
             theme: {
                 extend: {
                     colors: {
-                        darkBg: '#111827',
-                        darkCard: '#1F2937',
+                        darkBg: '#0f172a',
+                        darkCard: '#1e293b',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
                     }
                 }
             }
         }
     </script>
-    
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="assets/css/style.css">
+    
     <style>
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Glassmorphism */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+        .dark .glass-card {
+            background: rgba(30, 41, 59, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .hover-lift { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .hover-lift:hover { transform: translateY(-4px); box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1); }
+        
         .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="font-sans bg-[#EAE5E1] dark:bg-gray-900 transition-colors duration-200">
+<body class="bg-gray-50 dark:bg-darkBg transition-colors duration-200 select-none">
 
     <div class="relative min-h-screen md:flex">
         
-        <div class="md:hidden fixed w-full top-0 z-30 flex justify-between items-center bg-gray-800 text-white p-4 shadow-lg">
-            <h1 class="text-lg font-bold"><i class="fas fa-wallet mr-2"></i>FinTrack</h1>
-            <button id="menu-button" class="focus:outline-none p-2 rounded hover:bg-gray-700 transition-colors">
-                <i class="fas fa-bars text-xl"></i>
-            </button>
-        </div>
+        <div id="sidebar-backdrop" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden transition-opacity"></div>
 
-        <aside id="sidebar" class="w-64 bg-gray-800 text-white flex-col fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-2xl">
-            <div class="p-4 border-b border-gray-700 hidden md:block">
-                <h1 class="text-xl font-bold"><i class="fas fa-wallet mr-2"></i>FinTrack</h1>
-            </div>
-            
-            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-                <a href="index.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-chart-pie mr-3 w-5"></i><span data-i18n="nav_dashboard">Dashboard</span>
-                </a>
-                <a href="calendar.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-calendar-alt mr-3 w-5"></i><span data-i18n="nav_calendar">Calendar</span>
-                </a>
-                <a href="analysis.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-chart-line mr-3 w-5"></i><span data-i18n="nav_analysis">Analysis</span>
-                </a>
-                <a href="accounts.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-university mr-3 w-5"></i><span data-i18n="nav_accounts">Accounts</span>
-                </a>
-                <a href="recurring.html" class="flex items-center px-4 py-3 text-gray-100 bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-sync-alt mr-3 w-5"></i><span data-i18n="nav_recurring">Subscriptions</span>
-                </a>
-                <a href="categories.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-tags mr-3 w-5"></i><span data-i18n="nav_categories">Categories</span>
-                </a>
-                <a href="goals.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-bullseye mr-3 w-5"></i><span data-i18n="nav_goals">Goals</span>
-                </a>
-                <a href="debt.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-hand-holding-usd mr-3 w-5"></i><span data-i18n="nav_debts">Debts</span>
-                </a>
-                <a href="split-bill.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-users mr-3 w-5"></i><span data-i18n="nav_split">Split Bill</span>
-                </a>
-                <a href="history.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-history mr-3 w-5"></i><span data-i18n="nav_history">History</span>
-                </a>
-                <a href="profile.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-user-circle mr-3 w-5"></i><span data-i18n="nav_profile">Profile</span>
-                </a>
-                <a href="settings.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-cog mr-3 w-5"></i><span data-i18n="nav_settings">Settings</span>
-                </a>
-            </nav>
-
-            <div class="p-4 border-t border-gray-700">
-                <button id="logout-button" class="w-full flex items-center justify-center px-4 py-2 text-gray-300 hover:bg-red-600 rounded-md transition-colors">
-                    <i class="fas fa-sign-out-alt mr-3"></i><span data-i18n="nav_logout">Logout</span>
+        <aside id="sidebar" class="w-64 bg-gray-900 text-white flex-col fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-2xl h-full border-r border-gray-800">
+            <div class="p-5 border-b border-gray-800 flex justify-between items-center">
+                <h1 class="text-xl font-bold tracking-tight"><i class="fas fa-wallet mr-2 text-indigo-500"></i>FinTrack</h1>
+                <button onclick="window.closeSidebarMenu()" class="md:hidden text-gray-400 hover:text-white focus:outline-none p-2">
+                    <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
+            
+            <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+                <a href="index.html" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-colors"><i class="fas fa-chart-pie mr-3 w-5"></i><span>Dashboard</span></a>
+                <a href="calendar.html" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-colors"><i class="fas fa-calendar-alt mr-3 w-5"></i><span>Calendar</span></a>
+                <a href="analysis.html" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-colors"><i class="fas fa-chart-line mr-3 w-5"></i><span>Analysis</span></a>
+                <a href="accounts.html" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-colors"><i class="fas fa-university mr-3 w-5"></i><span>Accounts</span></a>
+                <a href="recurring.html" class="flex items-center px-4 py-3 text-white bg-indigo-600 rounded-xl transition-all shadow-lg shadow-indigo-900/20"><i class="fas fa-sync-alt mr-3 w-5"></i><span>Subscriptions</span></a>
+                
+                <a href="categories.html" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-colors"><i class="fas fa-tags mr-3 w-5"></i><span>Categories</span></a>
+                <a href="goals.html" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-colors"><i class="fas fa-bullseye mr-3 w-5"></i><span>Goals</span></a>
+                <a href="debt.html" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-colors"><i class="fas fa-hand-holding-usd mr-3 w-5"></i><span>Debts</span></a>
+                <a href="split-bill.html" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-colors"><i class="fas fa-users mr-3 w-5"></i><span>Split Bill</span></a>
+                <a href="history.html" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-colors"><i class="fas fa-history mr-3 w-5"></i><span>History</span></a>
+                <a href="profile.html" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-colors"><i class="fas fa-user-circle mr-3 w-5"></i><span>Profile</span></a>
+                <a href="settings.html" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-colors"><i class="fas fa-cog mr-3 w-5"></i><span>Settings</span></a>
+            </nav>
         </aside>
 
-        <main class="flex-1 p-4 pt-20 pb-28 md:p-10 md:pt-10 md:overflow-y-auto md:h-screen">
+        <main class="flex-1 p-4 pb-28 md:p-8 md:pb-8 overflow-y-auto min-h-screen relative z-10 flex flex-col">
             
-            <header class="mb-6">
-                <h2 class="text-3xl font-bold text-gray-800 dark:text-white" data-i18n="recurring_title">Recurring Expenses</h2>
-                <p class="text-gray-500 dark:text-gray-400" data-i18n="recurring_desc">Automate your fixed monthly bills like Rent, EMI, or Subscriptions.</p>
+            <header class="flex justify-between items-end mb-8 pt-2">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Subscriptions</h2>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Track recurring payments.</p>
+                </div>
+                <div class="glass-card px-5 py-3 rounded-2xl flex flex-col items-end border border-indigo-100 dark:border-indigo-900/30">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest font-semibold">Monthly Cost</p>
+                    <h3 id="total-monthly" class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">₹0</h3>
+                </div>
             </header>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
-                <div class="lg:col-span-1">
-                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-                        <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white" data-i18n="add_subscription">Add Subscription</h3>
-                        <form id="recurring-form" class="space-y-4">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1" data-i18n="lbl_name">Name</label>
-                                <input type="text" id="rec-name" required class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g., Netflix">
-                            </div>
-                            
-                            <div>
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1" data-i18n="lbl_amount">Amount (₹)</label>
-                                <input type="number" id="rec-amount" required class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="0.00">
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1" data-i18n="lbl_category">Category</label>
-                                <select id="rec-category" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                    <option value="Bills">Bills</option>
-                                    <option value="Entertainment">Entertainment</option>
-                                    <option value="Rent">Rent</option>
-                                    <option value="EMI">EMI</option>
-                                    <option value="Investment">Investment</option>
-                                    <option value="Other">Other</option>
-                                </select>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1" data-i18n="lbl_frequency">Frequency</label>
-                                    <select id="rec-frequency" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                        <option value="monthly">Monthly</option>
-                                        <option value="weekly">Weekly</option>
-                                        <option value="yearly">Yearly</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1" data-i18n="lbl_due_date">Next Due Date</label>
-                                    <input type="date" id="rec-date" required class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                </div>
-                            </div>
-
-                            <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 transition shadow-md" data-i18n="btn_add_sub">Add Subscription</button>
-                        </form>
-                    </div>
-                </div>
-
-                <div class="lg:col-span-2">
-                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md h-full">
-                        <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white" data-i18n="active_subscriptions">Active Subscriptions</h3>
-                        <div id="recurring-list" class="space-y-3">
-                            <div class="skeleton h-16 w-full rounded"></div>
-                            <div class="skeleton h-16 w-full rounded"></div>
-                        </div>
-                    </div>
-                </div>
-
+            <div id="recurring-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <p class="text-gray-500 col-span-full text-center py-10">Loading subscriptions...</p>
             </div>
+
+            <button id="add-recurring-btn" class="fixed bottom-24 right-4 md:bottom-10 md:right-10 bg-indigo-600 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center hover:bg-indigo-700 hover:scale-110 transition-all z-40">
+                <i class="fas fa-plus text-xl"></i>
+            </button>
 
         </main>
     </div>
 
-    <div class="md:hidden fixed bottom-0 w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex justify-around items-center p-3 z-50 shadow-lg pb-safe">
-        <a href="index.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-            <i class="fas fa-home text-lg"></i>
-            <span class="text-[10px] font-medium mt-1" data-i18n="nav_dashboard">Home</span>
-        </a>
-        <a href="analysis.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-            <i class="fas fa-chart-pie text-lg"></i>
-            <span class="text-[10px] font-medium mt-1" data-i18n="nav_analysis">Analysis</span>
-        </a>
-        <div class="relative -top-6">
-            <a href="index.html#transaction-form" class="flex items-center justify-center w-14 h-14 bg-indigo-600 rounded-full text-white shadow-lg border-4 border-[#EAE5E1] dark:border-gray-900">
-                <i class="fas fa-plus text-xl"></i>
-            </a>
+    <div id="recurring-modal" class="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm hidden flex-col items-center justify-center p-4 transition-opacity">
+        <div class="bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800">
+            <div class="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+                <h3 id="modal-title" class="text-xl font-bold text-gray-900 dark:text-white">New Subscription</h3>
+                <button id="close-modal" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <form id="recurring-form" class="p-6 space-y-5">
+                <input type="hidden" id="rec-id">
+                
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Service Name</label>
+                    <input type="text" id="rec-name" required class="block w-full py-3 px-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. Netflix">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Amount</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-3 text-gray-500">₹</span>
+                        <input type="number" id="rec-amount" required class="block w-full py-3 pl-8 pr-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white text-lg font-bold focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="0.00">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Next Due Date</label>
+                        <input type="date" id="rec-date" required class="block w-full py-3 px-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Frequency</label>
+                        <select id="rec-frequency" class="block w-full py-3 px-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <option value="monthly">Monthly</option>
+                            <option value="yearly">Yearly</option>
+                            <option value="weekly">Weekly</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Color Tag</label>
+                    <div class="flex justify-between gap-2">
+                        <label class="cursor-pointer"><input type="radio" name="rec-color" value="red" class="peer sr-only" checked><div class="w-8 h-8 rounded-full bg-rose-500 peer-checked:ring-2 ring-offset-2 ring-rose-500 dark:ring-offset-gray-900"></div></label>
+                        <label class="cursor-pointer"><input type="radio" name="rec-color" value="green" class="peer sr-only"><div class="w-8 h-8 rounded-full bg-emerald-500 peer-checked:ring-2 ring-offset-2 ring-emerald-500 dark:ring-offset-gray-900"></div></label>
+                        <label class="cursor-pointer"><input type="radio" name="rec-color" value="blue" class="peer sr-only"><div class="w-8 h-8 rounded-full bg-blue-500 peer-checked:ring-2 ring-offset-2 ring-blue-500 dark:ring-offset-gray-900"></div></label>
+                        <label class="cursor-pointer"><input type="radio" name="rec-color" value="black" class="peer sr-only"><div class="w-8 h-8 rounded-full bg-gray-800 peer-checked:ring-2 ring-offset-2 ring-gray-800 dark:ring-offset-gray-900"></div></label>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-indigo-600 text-white py-3.5 rounded-xl hover:bg-indigo-700 transition font-bold shadow-lg shadow-indigo-500/30">Save Subscription</button>
+            </form>
         </div>
-        <a href="recurring.html" class="flex flex-col items-center text-indigo-600 dark:text-indigo-400">
-            <i class="fas fa-sync-alt text-lg"></i>
-            <span class="text-[10px] font-medium mt-1" data-i18n="nav_recurring">Auto</span>
-        </a>
-        <a href="settings.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-            <i class="fas fa-cog text-lg"></i>
-            <span class="text-[10px] font-medium mt-1" data-i18n="nav_settings">Settings</span>
-        </a>
+    </div>
+
+    <div class="md:hidden fixed bottom-0 w-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-lg border-t border-gray-200 dark:border-gray-800 flex justify-around items-center p-3 z-50 shadow-lg pb-safe">
+        <a href="index.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors active:scale-90"><i class="fas fa-home text-xl mb-1"></i><span class="text-[10px] font-medium">Home</span></a>
+        <a href="recurring.html" class="flex flex-col items-center text-indigo-600 dark:text-indigo-400 transition-transform active:scale-90"><i class="fas fa-sync-alt text-xl mb-1"></i><span class="text-[10px] font-bold">Subs</span></a>
+        <div class="relative -top-8">
+            <a href="index.html#transaction-form" class="flex items-center justify-center w-14 h-14 bg-indigo-600 rounded-full text-white shadow-lg shadow-indigo-500/40 border-4 border-[#EAE5E1] dark:border-gray-900 transition-transform active:scale-90"><i class="fas fa-plus text-xl"></i></a>
+        </div>
+        <a href="history.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors active:scale-90"><i class="fas fa-history text-xl mb-1"></i><span class="text-[10px] font-medium">History</span></a>
+        <a href="settings.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors active:scale-90"><i class="fas fa-cog text-xl mb-1"></i><span class="text-[10px] font-medium">Settings</span></a>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -194,10 +182,7 @@
     <script src="assets/js/auth.js"></script>
     <script src="assets/js/main.js"></script>
     <script src="assets/js/theme.js"></script>
-    <script src="assets/js/recurring.js"></script>
     
-    <script src="assets/js/security.js"></script>
-    <script src="assets/js/notifications.js"></script>
-    <script src="assets/js/lang.js"></script>
+    <script src="assets/js/recurring.js"></script>
 </body>
 </html>

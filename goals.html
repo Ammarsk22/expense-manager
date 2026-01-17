@@ -2,13 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Savings Goals | FinTrack</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <title>Goals | FinTrack</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4F46E5">
-    <link rel="apple-touch-icon" href="assets/img/icon-192.png">
     
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="assets/img/icon-192.png">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -16,180 +19,127 @@
             theme: {
                 extend: {
                     colors: {
-                        darkBg: '#111827',
-                        darkCard: '#1F2937',
+                        darkBg: '#0f172a',
+                        darkCard: '#1e293b',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
                     }
                 }
             }
         }
     </script>
-    
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="assets/css/style.css">
-    <style>
-        .modal { transition: opacity 0.25s ease; }
-        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
-    </style>
 </head>
-<body class="font-sans bg-[#EAE5E1] dark:bg-gray-900 transition-colors duration-200">
+<body class="bg-gray-50 dark:bg-darkBg transition-colors duration-200 select-none">
 
     <div class="relative min-h-screen md:flex">
         
-        <div class="md:hidden fixed w-full top-0 z-30 flex justify-between items-center bg-indigo-600 dark:bg-gray-900 text-white p-4 shadow-lg transition-colors duration-200">
-            <h1 class="text-lg font-bold"><i class="fas fa-wallet mr-2 text-white/90"></i>FinTrack</h1>
-            <button id="menu-button" class="focus:outline-none p-2 rounded hover:bg-indigo-700 dark:hover:bg-gray-800 transition-colors">
-                <i class="fas fa-bars text-xl"></i>
-            </button>
-        </div>
+        <div id="sidebar-backdrop" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden transition-opacity"></div>
 
-        <aside id="sidebar" class="w-64 bg-gray-800 text-white flex-col fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-2xl">
-            <div class="p-4 border-b border-gray-700 hidden md:block">
-                <h1 class="text-xl font-bold"><i class="fas fa-wallet mr-2"></i>FinTrack</h1>
+        <aside id="sidebar" class="w-64 bg-gray-900 text-white flex-col fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-50 shadow-2xl h-full border-r border-gray-800">
+            <div class="p-5 border-b border-gray-800 flex justify-between items-center">
+                <h1 class="text-xl font-bold tracking-tight"><i class="fas fa-wallet mr-2 text-indigo-500"></i>FinTrack</h1>
+                <button onclick="window.closeSidebarMenu()" class="md:hidden text-gray-400 hover:text-white focus:outline-none p-2">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
             </div>
             
-            <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
-                <a href="index.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-chart-pie mr-3 w-5"></i><span data-i18n="nav_dashboard">Dashboard</span>
-                </a>
-                <a href="calendar.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-calendar-alt mr-3 w-5"></i><span data-i18n="nav_calendar">Calendar</span>
-                </a>
-                <a href="analysis.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-chart-line mr-3 w-5"></i><span data-i18n="nav_analysis">Analysis</span>
-                </a>
-                <a href="accounts.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-university mr-3 w-5"></i><span data-i18n="nav_accounts">Accounts</span>
-                </a>
-                <a href="recurring.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-sync-alt mr-3 w-5"></i><span data-i18n="nav_recurring">Subscriptions</span>
-                </a>
-                <a href="categories.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-tags mr-3 w-5"></i><span data-i18n="nav_categories">Categories</span>
-                </a>
-                <a href="goals.html" class="flex items-center px-4 py-3 text-gray-100 bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-bullseye mr-3 w-5"></i><span data-i18n="nav_goals">Goals</span>
-                </a>
-                <a href="debt.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-hand-holding-usd mr-3 w-5"></i><span data-i18n="nav_debts">Debts</span>
-                </a>
-                <a href="split-bill.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-users mr-3 w-5"></i><span data-i18n="nav_split">Split Bill</span>
-                </a>
-                <a href="history.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-history mr-3 w-5"></i><span data-i18n="nav_history">History</span>
-                </a>
-                <a href="profile.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-user-circle mr-3 w-5"></i><span data-i18n="nav_profile">Profile</span>
-                </a>
-                <a href="settings.html" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md transition-colors">
-                    <i class="fas fa-cog mr-3 w-5"></i><span data-i18n="nav_settings">Settings</span>
-                </a>
+            <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+                <a href="index.html" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-colors"><i class="fas fa-chart-pie mr-3 w-5"></i><span>Dashboard</span></a>
+                <a href="calendar.html" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-colors"><i class="fas fa-calendar-alt mr-3 w-5"></i><span>Calendar</span></a>
+                <a href="analysis.html" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-colors"><i class="fas fa-chart-line mr-3 w-5"></i><span>Analysis</span></a>
+                <a href="accounts.html" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-colors"><i class="fas fa-university mr-3 w-5"></i><span>Accounts</span></a>
+                <a href="recurring.html" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-colors"><i class="fas fa-sync-alt mr-3 w-5"></i><span>Subscriptions</span></a>
+                <a href="categories.html" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-colors"><i class="fas fa-tags mr-3 w-5"></i><span>Categories</span></a>
+                <a href="goals.html" class="flex items-center px-4 py-3 text-white bg-indigo-600 rounded-xl transition-all shadow-lg shadow-indigo-900/20"><i class="fas fa-bullseye mr-3 w-5"></i><span>Goals</span></a>
+                
+                <a href="debt.html" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-colors"><i class="fas fa-hand-holding-usd mr-3 w-5"></i><span>Debts</span></a>
+                <a href="split-bill.html" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-colors"><i class="fas fa-users mr-3 w-5"></i><span>Split Bill</span></a>
+                <a href="history.html" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-colors"><i class="fas fa-history mr-3 w-5"></i><span>History</span></a>
+                <a href="profile.html" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-colors"><i class="fas fa-user-circle mr-3 w-5"></i><span>Profile</span></a>
+                <a href="settings.html" class="flex items-center px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-colors"><i class="fas fa-cog mr-3 w-5"></i><span>Settings</span></a>
             </nav>
-
-            <div class="p-4 border-t border-gray-700">
-                <button id="logout-button" class="w-full flex items-center justify-center px-4 py-2 text-gray-300 hover:bg-red-600 rounded-md transition-colors">
-                    <i class="fas fa-sign-out-alt mr-3"></i><span data-i18n="nav_logout">Logout</span>
-                </button>
-            </div>
         </aside>
 
-        <main class="flex-1 p-4 pt-20 pb-28 md:p-10 md:pt-10 overflow-y-auto h-screen">
-            <header class="flex justify-between items-center mb-8">
+        <main class="flex-1 p-4 pb-28 md:p-8 md:pb-8 overflow-y-auto min-h-screen relative z-10 flex flex-col">
+            
+            <header class="flex justify-between items-end mb-8 pt-2">
                 <div>
-                    <h2 class="text-3xl font-bold text-gray-800 dark:text-white" data-i18n="goals_title">Savings Goals</h2>
-                    <p class="text-gray-500 dark:text-gray-400" data-i18n="goals_desc">Track your progress towards financial targets.</p>
+                    <h2 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Financial Goals</h2>
+                    <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Dream big, start small.</p>
                 </div>
-                <button id="add-goal-btn" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors flex items-center shadow-lg">
-                    <i class="fas fa-plus mr-2"></i> <span data-i18n="btn_new_goal">New Goal</span>
-                </button>
+                <div class="text-right">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-widest font-semibold">Total Saved</p>
+                    <h3 id="total-saved" class="text-2xl md:text-3xl font-bold text-indigo-600 dark:text-indigo-400">₹0</h3>
+                </div>
             </header>
 
-            <div id="goals-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md animate-pulse">
-                    <div class="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4"></div>
-                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2"></div>
-                    <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
-                </div>
+            <div id="goals-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <p class="text-gray-500 col-span-full text-center py-10">Loading goals...</p>
             </div>
+
+            <button id="add-goal-btn" class="fixed bottom-24 right-4 md:bottom-10 md:right-10 bg-indigo-600 text-white w-14 h-14 rounded-full shadow-2xl flex items-center justify-center hover:bg-indigo-700 hover:scale-110 transition-all z-40">
+                <i class="fas fa-plus text-xl"></i>
+            </button>
+
         </main>
     </div>
 
-    <div id="goal-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm transition-colors duration-200">
-            <h3 id="modal-title" class="text-xl font-bold text-gray-800 dark:text-white mb-4" data-i18n="modal_new_goal">Create New Goal</h3>
-            <form id="goal-form" class="space-y-4">
+    <div id="goal-modal" class="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm hidden flex-col items-center justify-center p-4 transition-opacity">
+        <div class="bg-white dark:bg-gray-900 w-full max-w-sm rounded-3xl shadow-2xl border border-gray-200 dark:border-gray-800">
+            <div class="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+                <h3 id="modal-title" class="text-xl font-bold text-gray-900 dark:text-white">New Goal</h3>
+                <button id="close-modal" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <form id="goal-form" class="p-6 space-y-5">
                 <input type="hidden" id="goal-id">
+                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300" data-i18n="lbl_goal_name">Goal Name</label>
-                    <input type="text" id="goal-name" required placeholder="e.g., New Laptop" class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-indigo-500">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Goal Name</label>
+                    <input type="text" id="goal-name" required class="block w-full py-3 px-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="e.g. New Car, Vacation">
                 </div>
+
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300" data-i18n="lbl_target_amt">Target Amount (₹)</label>
-                    <input type="number" id="goal-target" required placeholder="50000" class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-indigo-500">
-                </div>
-                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300" data-i18n="lbl_current_saved">Current Saved (Optional)</label>
-                    <input type="number" id="goal-saved" value="0" class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300" data-i18n="lbl_color">Color</label>
-                    <div class="flex space-x-2 mt-1">
-                        <div class="color-option w-8 h-8 rounded-full bg-blue-500 cursor-pointer border-2 border-transparent hover:scale-110 transition-transform" data-color="blue"></div>
-                        <div class="color-option w-8 h-8 rounded-full bg-green-500 cursor-pointer border-2 border-transparent hover:scale-110 transition-transform" data-color="green"></div>
-                        <div class="color-option w-8 h-8 rounded-full bg-purple-500 cursor-pointer border-2 border-transparent hover:scale-110 transition-transform" data-color="purple"></div>
-                        <div class="color-option w-8 h-8 rounded-full bg-pink-500 cursor-pointer border-2 border-transparent hover:scale-110 transition-transform" data-color="pink"></div>
-                        <div class="color-option w-8 h-8 rounded-full bg-yellow-500 cursor-pointer border-2 border-transparent hover:scale-110 transition-transform" data-color="yellow"></div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Target Amount</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-3 text-gray-500">₹</span>
+                        <input type="number" id="goal-target" required class="block w-full py-3 pl-8 pr-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white text-lg font-bold focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="0.00">
                     </div>
-                    <input type="hidden" id="goal-color" value="blue">
                 </div>
-                <div class="flex justify-end space-x-2 pt-4">
-                    <button type="button" id="close-modal-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 transition-colors" data-i18n="btn_cancel">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors" data-i18n="btn_save_goal">Save Goal</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
-    <div id="add-money-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm transition-colors duration-200">
-            <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4" data-i18n="modal_add_money">Add to Savings</h3>
-            <p class="text-gray-500 dark:text-gray-400 mb-4 text-sm"><span data-i18n="lbl_adding_to">Adding money to</span> <span id="add-money-goal-name" class="font-bold"></span></p>
-            <form id="add-money-form" class="space-y-4">
-                <input type="hidden" id="add-money-goal-id">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300" data-i18n="lbl_amount_add">Amount to Add (₹)</label>
-                    <input type="number" id="add-amount" required class="mt-1 block w-full py-2 px-3 border border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white focus:outline-none focus:ring-indigo-500">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Already Saved</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-3 text-gray-500">₹</span>
+                        <input type="number" id="goal-saved" value="0" class="block w-full py-3 pl-8 pr-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="0.00">
+                    </div>
                 </div>
-                <div class="flex justify-end space-x-2 pt-4">
-                    <button type="button" id="close-add-modal" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 transition-colors" data-i18n="btn_cancel">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors" data-i18n="btn_add_amount">Add Amount</button>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Target Date</label>
+                    <input type="date" id="goal-date" required class="block w-full py-3 px-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
                 </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1.5 ml-1">Color</label>
+                    <div class="flex justify-between gap-2">
+                        <label class="cursor-pointer"><input type="radio" name="goal-color" value="blue" class="peer sr-only" checked><div class="w-8 h-8 rounded-full bg-blue-500 peer-checked:ring-2 ring-offset-2 ring-blue-500 dark:ring-offset-gray-900"></div></label>
+                        <label class="cursor-pointer"><input type="radio" name="goal-color" value="purple" class="peer sr-only"><div class="w-8 h-8 rounded-full bg-purple-500 peer-checked:ring-2 ring-offset-2 ring-purple-500 dark:ring-offset-gray-900"></div></label>
+                        <label class="cursor-pointer"><input type="radio" name="goal-color" value="pink" class="peer sr-only"><div class="w-8 h-8 rounded-full bg-pink-500 peer-checked:ring-2 ring-offset-2 ring-pink-500 dark:ring-offset-gray-900"></div></label>
+                        <label class="cursor-pointer"><input type="radio" name="goal-color" value="emerald" class="peer sr-only"><div class="w-8 h-8 rounded-full bg-emerald-500 peer-checked:ring-2 ring-offset-2 ring-emerald-500 dark:ring-offset-gray-900"></div></label>
+                        <label class="cursor-pointer"><input type="radio" name="goal-color" value="amber" class="peer sr-only"><div class="w-8 h-8 rounded-full bg-amber-500 peer-checked:ring-2 ring-offset-2 ring-amber-500 dark:ring-offset-gray-900"></div></label>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-indigo-600 text-white py-3.5 rounded-xl hover:bg-indigo-700 transition font-bold shadow-lg shadow-indigo-500/30">Save Goal</button>
             </form>
         </div>
-    </div>
-
-    <div class="md:hidden fixed bottom-0 w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex justify-around items-center p-3 z-50 shadow-lg pb-safe">
-        <a href="index.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-            <i class="fas fa-home text-lg"></i>
-            <span class="text-[10px] font-medium mt-1" data-i18n="nav_dashboard">Home</span>
-        </a>
-        <a href="analysis.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-            <i class="fas fa-chart-pie text-lg"></i>
-            <span class="text-[10px] font-medium mt-1" data-i18n="nav_analysis">Analysis</span>
-        </a>
-        <div class="relative -top-6">
-            <a href="index.html#transaction-form" class="flex items-center justify-center w-14 h-14 bg-indigo-600 rounded-full text-white shadow-lg border-4 border-[#EAE5E1] dark:border-gray-900">
-                <i class="fas fa-plus text-xl"></i>
-            </a>
-        </div>
-        <a href="goals.html" class="flex flex-col items-center text-indigo-600 dark:text-indigo-400">
-            <i class="fas fa-bullseye text-lg"></i>
-            <span class="text-[10px] font-medium mt-1" data-i18n="nav_goals">Goals</span>
-        </a>
-        <a href="settings.html" class="flex flex-col items-center text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-            <i class="fas fa-cog text-lg"></i>
-            <span class="text-[10px] font-medium mt-1" data-i18n="nav_settings">Settings</span>
-        </a>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -202,8 +152,5 @@
     <script src="assets/js/theme.js"></script>
     
     <script src="assets/js/goals.js"></script>
-    <script src="assets/js/security.js"></script>
-    <script src="assets/js/notifications.js"></script>
-    <script src="assets/js/lang.js"></script>
 </body>
 </html>
